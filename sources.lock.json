@@ -609,13 +609,13 @@
     {
       "name": "unicell",
       "repository": "https://github.com/OmniDocX/unicell",
-      "commit": "e152a7c75a3cb9586a9e3575a68f60f36863d62a",
+      "commit": "9a45c5f94da22cc78cd9654258c334ebef8ff15c",
       "directory": "projects/unicell",
       "license": "projects/unicell/LICENSE",
       "files": {
         ".env.example": "3c7ab3bf02379e28ab1808991ec1764c1322f390a8fc6549bbefe7321a8a9d34",
         ".gitattributes": "a883ad5302dfdfb713f37c039cf213581a24967e9c20e63cef9dc0e299b19738",
-        ".github/workflows/ci.yml": "fca447cd9e93d25779577b4ed4f54fc29f9b2c88c23bcdb9ed15d832c99f425a",
+        ".github/workflows/ci.yml": "9b689b4021c5946159c277e9a805a5584efa467098b8a1a51fdbee17962713ba",
         ".gitignore": "81dee1aea5cd34dd3b577b298b63fa4fe9b238366ef0ea1b4e4f9904100f7072",
         "FONT_LOADING.md": "f4afb1ce9c2ae186e1d55b6c37aad0074b2bb078a2401cabb00f431fd62e4d1c",
         "LICENSE": "c0ea4a896d2c8c394b29f9427589996db826cd501c512279ff0ed3ef48fabbe5",
