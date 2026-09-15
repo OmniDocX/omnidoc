@@ -2,43 +2,53 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-This collection reports the measured performance of its three components and a separate measurement of source integrity verification. It has no independent office runtime; verification latency is not editing or calculation latency.
+This collection provides independent component measurements and a separate measurement of source integrity verification. It has no independent office runtime; source verification latency does not represent document editing or calculation speed.
 
-## Environment and method
+Environment: Windows 10 10.0.19045, Intel Core i7-1165G7 (4 cores / 8 threads), 31.70 GiB RAM, Python 3.13.11; components use Rust 1.97.1 release builds. Each case has two warmups and seven measured iterations, run sequentially. Nearest-rank P95 equals the maximum with seven samples. All measured observations are retained.
 
-Environment: Windows 10 10.0.19045, Intel Core i7-1165G7 (4 cores / 8 threads), 31.70 GiB RAM, Python 3.13.11. Component binaries use Rust 1.97.1 release builds. Each case has two warmups and seven measured iterations, run sequentially. P95 uses nearest rank and equals the maximum with seven observations. Raw data retains every measured sample, including slow observations.
-
-## Component results
+## Component benchmarks
 
 | Project | Operation | Size | Median ms | P95 ms |
 | --- | --- | ---: | ---: | ---: |
 | UniPPT | PPTX export | 100 slides | 139.41 | 316.91 |
 | UniPPT | PPTX import, cache miss | 100 slides | 813.36 | 1721.34 |
-| UniCell | CSV import + calculation | 10,000 rows | 20217.27 | 28130.84 |
-| UniCell | XLSX export | 10,000 rows | 452.73 | 557.95 |
-| UniCell | Batch edit + recalculation | 10,000 rows | 19081.38 | 23292.38 |
+| UniCell | CSV import + calculation | 10,000 rows | 660.92 | 707.79 |
+| UniCell | XLSX export | 10,000 rows | 562.30 | 618.65 |
+| UniCell | Batch edit + recalculation | 10,000 rows | 120.68 | 135.50 |
 | vecmeta | SVG → EMF, CLI | 10,000 primitives | 105.80 | 118.47 |
 | vecmeta | EMF → SVG, CLI | 10,000 primitives | 57.10 | 95.53 |
 
-Measurements come from a shared workstation without full control of background load; timings may not increase monotonically with size. HTTP cases exclude browser rendering; vecmeta includes CLI startup and file I/O. Large CSV import is an observed bottleneck; XLSX export latency does not represent import or recalculation speed. Office 365 and WPS were not timed, and no competitor speed ratio is reported.
+UniCell includes the SUM optimization: public-edition import plus calculation of the same 10,000-row CSV improved from 20.217 s to 0.661 s, approximately 31×; all 20,000 formulas and results passed on every new iteration. The earlier full-application experiment at 0.368 s (approximately 55×) and the old baseline are retained in the [UniCell report](../projects/unicell/benchmarks/README.md). The optimized measurements use different builds and must not be conflated.
 
-| Project | Included commit | Runtime build commit | Report and raw data |
+Background load on the shared workstation was not fully controlled; results apply only to the listed synthetic workloads. HTTP measurements exclude browser rendering; vecmeta includes CLI startup and file I/O. Office 365, Excel and WPS were not timed, so no competitor speed ranking is reported.
+
+| Project | Included commit | Runtime build commit | Report and data |
 | --- | --- | --- | --- |
-| UniPPT | `6ff38470e22de19dd822f4ff616e06cbb13148b5` | `e66c1e0eab10a93afd776a755e0973149dedcd73` | [Report](../projects/UniPPT/benchmarks/README.md) · [JSON](../projects/UniPPT/benchmarks/results/2026-09-16-windows-x64.json) |
-| unicell | `44bfc75e3c49eda4ac408f50c711ce70b0e34e7a` | `51e007388d702f23290bb44df7270d164daa0e2d` | [Report](../projects/unicell/benchmarks/README.md) · [JSON](../projects/unicell/benchmarks/results/2026-09-16-windows-x64.json) |
-| vecmeta | `2d2ce09aad1778b52a5af4bbc1902d166c286d08` | `96acc4608d644d8137fd334412e82bb2ba7c5a0a` | [Report](../projects/vecmeta/benchmarks/README.md) · [JSON](../projects/vecmeta/benchmarks/results/2026-09-16-windows-x64.json) |
+| UniPPT | `14521e76459ac6236c484a0092e84da6e7b71f8b` | `e66c1e0eab10a93afd776a755e0973149dedcd73` | [Report](../projects/UniPPT/benchmarks/README.md) · [JSON](../projects/UniPPT/benchmarks/results/2026-09-16-windows-x64.json) |
+| unicell | `9a45c5f94da22cc78cd9654258c334ebef8ff15c` | `dc6f6c6a5c5de532e93b3adbf6a00336562a1a9f` | [Report](../projects/unicell/benchmarks/README.md) · [JSON](../projects/unicell/benchmarks/results/2026-09-16-sum-optimized-windows-x64.json) |
+| vecmeta | `5e186640fc943720635c2bc69e068078bc6d42a7` | `96acc4608d644d8137fd334412e82bb2ba7c5a0a` | [Report](../projects/vecmeta/benchmarks/README.md) · [JSON](../projects/vecmeta/benchmarks/results/2026-09-16-windows-x64.json) |
 
-## Collection integrity verification
+## Current source integrity verification
 
-Timing includes Python/Git process startup, indexed file inventory, reads of every copied source file and SHA-256 verification. OS caches are warm. Network and application startup are excluded. An overlapping preflight execution was rejected; the published data comes from a subsequent sequential rerun.
+Current snapshot verification includes Python/Git startup, indexed file inventory, all source-file reads and SHA-256 checks. OS caches are warm; network and application runtime are excluded. The two collections were measured sequentially.
 
-1,321 files · 18,463,820 bytes · SHA-256 manifest: `f12679d3c36f3e9da0f3104c210fd0b307316869ef0edc3ed76f4edc2b88fb79`
+1,333 files · 18,518,350 bytes · manifest SHA-256: `892fdc03696104800d2c2a3227c3e81598fd0596d174ca9b02531a2033d3e44d`
+
+| Operation | Size (files) | Median ms | P95 ms |
+| --- | ---: | ---: | ---: |
+| Source integrity verification | 1,333 | 375.54 | 408.44 |
+
+[JSON](results/2026-09-16-polyform-snapshot-windows-x64.json)
+
+## Preserved historical snapshot
+
+The following measurement belongs to the preceding source snapshot, with its own file count and hashes. It does not describe the current collection, and the latency change alone does not establish an optimization benefit.
 
 | Operation | Size (files) | Median ms | P95 ms |
 | --- | ---: | ---: | ---: |
 | Source integrity verification | 1,321 | 1557.28 | 3363.75 |
 
-[Raw observations](results/2026-09-16-windows-x64.json). The manifest hash and component commits identify the source collection actually measured; the collection commit in environment metadata is the baseline at execution time.
+[JSON](results/2026-09-16-windows-x64.json)
 
 ## Reproduce
 
@@ -47,5 +57,4 @@ python tools/verify_copies.py
 python benchmarks/run.py --warmups 2 --samples 7 --output benchmarks/results/local.json
 python benchmarks/verify_results.py
 ```
-
-Run component benchmarks from their respective `projects/` directories; each report includes its build profile and reproduction commands.
+Run component benchmarks from their respective `projects/` directories; build profiles and commands are in the linked reports.

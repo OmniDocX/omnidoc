@@ -15,21 +15,23 @@ OmniDoc brings together buildable copies of UniPPT, UniCell and vecmeta for loca
 ## Performance
 
 <!-- BENCHMARK:START -->
-Environment: Windows 10 10.0.19045, Intel Core i7-1165G7 (4 cores / 8 threads), 31.70 GiB RAM, Python 3.13.11. Component binaries use Rust 1.97.1 release builds. Each case has two warmups and seven measured iterations, run sequentially. P95 uses nearest rank and equals the maximum with seven observations. Raw data retains every measured sample, including slow observations.
+Environment: Windows 10 10.0.19045, Intel Core i7-1165G7 (4 cores / 8 threads), 31.70 GiB RAM, Python 3.13.11; components use Rust 1.97.1 release builds. Each case has two warmups and seven measured iterations, run sequentially. Nearest-rank P95 equals the maximum with seven samples. All measured observations are retained.
 
 | Project | Operation | Size | Median ms | P95 ms |
 | --- | --- | ---: | ---: | ---: |
 | UniPPT | PPTX export | 100 slides | 139.41 | 316.91 |
 | UniPPT | PPTX import, cache miss | 100 slides | 813.36 | 1721.34 |
-| UniCell | CSV import + calculation | 10,000 rows | 20217.27 | 28130.84 |
-| UniCell | XLSX export | 10,000 rows | 452.73 | 557.95 |
-| UniCell | Batch edit + recalculation | 10,000 rows | 19081.38 | 23292.38 |
+| UniCell | CSV import + calculation | 10,000 rows | 660.92 | 707.79 |
+| UniCell | XLSX export | 10,000 rows | 562.30 | 618.65 |
+| UniCell | Batch edit + recalculation | 10,000 rows | 120.68 | 135.50 |
 | vecmeta | SVG → EMF, CLI | 10,000 primitives | 105.80 | 118.47 |
 | vecmeta | EMF → SVG, CLI | 10,000 primitives | 57.10 | 95.53 |
 
-[Full report and source verification benchmark](benchmarks/README.md)
+UniCell includes the SUM optimization: public-edition import plus calculation of the same 10,000-row CSV improved from 20.217 s to 0.661 s, approximately 31×; all 20,000 formulas and results passed on every new iteration. The earlier full-application experiment at 0.368 s (approximately 55×) and the old baseline are retained in the [UniCell report](projects/unicell/benchmarks/README.md). The optimized measurements use different builds and must not be conflated.
 
-Measurements come from a shared workstation without full control of background load; timings may not increase monotonically with size. HTTP cases exclude browser rendering; vecmeta includes CLI startup and file I/O. Large CSV import is an observed bottleneck; XLSX export latency does not represent import or recalculation speed. Office 365 and WPS were not timed, and no competitor speed ratio is reported.
+[Full report and source integrity verification](benchmarks/README.md)
+
+Background load on the shared workstation was not fully controlled; results apply only to the listed synthetic workloads. HTTP measurements exclude browser rendering; vecmeta includes CLI startup and file I/O. Office 365, Excel and WPS were not timed, so no competitor speed ranking is reported.
 <!-- BENCHMARK:END -->
 
 ## Included projects
