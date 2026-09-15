@@ -1,0 +1,67 @@
+name: Verify
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    runs-on: ubuntu-24.04
+    container: rust:1.88.0-bookworm
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Install formula dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends python3 python3-venv
+          python3 -m venv .venv
+          .venv/bin/python -m pip install -r tools/math/requirements.txt
+      - name: Test the locked Rust workspace
+        run: UNIPPT_PYTHON="$GITHUB_WORKSPACE/.venv/bin/python" cargo test --workspace --locked
+
+  web:
+    runs-on: ubuntu-24.04
+    container: node:22-bookworm
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Install audio regression tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version
+          ffprobe -version
+      - name: Test editor and audio export
+        run: |
+          npm ci --no-audit --no-fund
+          node --check web/app.js
+          node --test web/*.test.js tools/*.test.cjs
+
+  public-boundary:
+    runs-on: ubuntu-24.04
+    container: python:3.12-slim
+    steps:
+      - name: Install Git for indexed-blob inspection
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends git
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Test and run publication checks
+        run: |
+          # Container steps may run as root while the runner owns the checkout.
+          # Trust only this checkout; checkout's temporary HOME does not persist.
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          python tools/test_public_boundary.py -v
+          python tools/check_public_boundary.py --history

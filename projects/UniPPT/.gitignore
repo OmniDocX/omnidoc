@@ -1,0 +1,45 @@
+/target/
+/node_modules/
+/target-next/
+/.venv/
+/.tmp/
+/artifacts/
+**/__pycache__/
+*.py[cod]
+*.stdout.log
+*.stderr.log
+.DS_Store
+Thumbs.db
+.env
+.env.local
+*.env.local
+/.env.clean-image.local
+/.unippt-quality-runtime.json
+/tools/html-video-renderer/node_modules/
+.unippt-mcp/
+
+# Local experiments, exports and logs are not release source.
+/.tmp-*
+/.codex-logs/
+/outputs/
+*.log
+
+# Never publish local identities, provider keys or private TLS material.
+.env.*
+!.env.example
+*.dpapi.xml
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Private deployment handoff: contains operator passwords and must stay local.
+/deploy/UNIPPT_PRODUCTION_HANDOFF_20260912.md
+/deploy/UNIPPT_PRODUCTION_HANDOFF_PRIVATE_*.md
+
+# Private authoring and operations records are outside the public source edition.
+/ara/
+/deploy/
+/design-qa.md
+/todo.md
+*.bundle

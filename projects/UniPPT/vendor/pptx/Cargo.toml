@@ -1,0 +1,40 @@
+[package]
+name = "unippt-pptx"
+version = "0.1.0-unippt.1"
+edition = "2021"
+rust-version = "1.85"
+description = "UniPPT's maintained fork of rust-pptx for loss-aware PowerPoint parsing and editing"
+license = "MIT"
+repository = "https://github.com/hidemi-ito/rust-pptx"
+homepage = "https://github.com/hidemi-ito/rust-pptx"
+readme = "README.md"
+authors = ["Hidemi Ito"]
+keywords = ["pptx", "powerpoint", "presentation", "office", "openxml"]
+categories = ["parser-implementations", "encoding"]
+exclude = ["COMPATIBILITY.md", "CONTRIBUTING.md", ".github/", "*.rlib"]
+
+[features]
+default = []
+cli = ["dep:clap"]
+
+[lib]
+name = "pptx"
+path = "src/lib.rs"
+
+[[bin]]
+name = "pptx-cli"
+path = "src/bin/pptx_cli.rs"
+required-features = ["cli"]
+
+[dependencies]
+# The upstream crate enabled zip's optional `time` feature without using it.  Its
+# newest transitive version requires a newer compiler than the advertised MSRV.
+# UniPPT keeps the smaller, reproducible feature set actually required by PPTX.
+zip = { version = "7", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+quick-xml = "0.39"
+thiserror = "2"
+sha1 = "0.10"
+clap = { version = "4", features = ["derive"], optional = true }
+
+[dev-dependencies]
+tempfile = "3"

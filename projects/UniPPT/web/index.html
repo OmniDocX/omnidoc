@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>UniPPT — 演示文稿编辑器</title>
+  <link rel="icon" href="{{asset:/unippt-logo.svg}}" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="{{asset:/unippt-logo.svg}}">
+  <script>
+    (() => {
+      "use strict";
+      const startedAt = performance.now();
+      const startupProfile = new URLSearchParams(location.search).get("startupProfile") === "legacy"
+        ? "legacy"
+        : "optimized";
+      const metrics = { startedAt, startupProfile };
+      const handoffRequested = /^#(?:.*&)?unippt-handoff=[0-9a-f-]{36}(?:&|$)/i.test(location.hash);
+      metrics.handoffRequested = handoffRequested;
+      const demoController = new AbortController();
+      let demoPromise = null;
+
+      // Start the only first-screen data request before CSS or editor modules.
+      // Resolve errors into a value so a temporarily unavailable server cannot
+      // produce an unhandled rejection while the editor core is downloading.
+      function requestDemo() {
+        if (demoPromise) return demoPromise;
+        metrics.demoRequestedAt = performance.now();
+        demoPromise = fetch("/api/demo", {
+          cache: "no-store",
+          signal: demoController.signal,
+        }).then(
+          (response) => {
+            metrics.demoResponseAt = performance.now();
+            return { response };
+          },
+          (error) => {
+            metrics.demoResponseAt = performance.now();
+            return { error };
+          },
+        );
+        return demoPromise;
+      }
+      // A handoff supplies its own document; otherwise preload the local demo.
+      if (startupProfile === "optimized" && !handoffRequested) requestDemo();
+
+      const assets = Object.freeze({
+        "/unippt-logo.svg": "{{asset:/unippt-logo.svg}}",
+      });
+      const features = Object.freeze({
+        core: {
+          scripts: [
+            "{{asset:/document_handoff.js}}",
+            "{{asset:/presentation_scene_runtime.js}}",
+            "{{asset:/document_cache.js}}",
+            "{{asset:/mini_format_runtime.js}}",
+            "{{asset:/local_settings.js}}",
+            "{{asset:/presentation_host.js}}",
+          ],
+        },
+        font: {
+          scripts: [
+            "{{asset:/font_catalog.js}}",
+            "{{asset:/font_runtime.js}}",
+          ],
+        },
+        render: {
+          dependsOn: ["font"],
+          scripts: [
+            "{{asset:/media_runtime.js}}",
+            "{{asset:/chart_runtime.js}}",
+            "{{asset:/ink_runtime.js}}",
+            "{{asset:/color_picker_runtime.js}}",
+          ],
+        },
+        presentation: {
+          dependsOn: ["render"],
+          scripts: [
+            "{{asset:/preset_animation_runtime.js}}",
+            "{{asset:/motion_path_runtime.js}}",
+            "{{asset:/presentation_flow_runtime.js}}",
+            "{{asset:/presentation_transition_runtime.js}}",
+          ],
+        },
+        mcp: {
+          scripts: [
+            "{{asset:/presentation_host.js}}",
+            "{{asset:/mcp_scene.js}}",
+            "{{asset:/mcp_animation.js}}",
+            "{{asset:/mcp_connection_policy.js}}",
+            "{{asset:/image_semantic_module_runtime.js}}",
+            "{{asset:/mcp_path_dash.js}}",
+            "{{asset:/mcp_row_patch.js}}",
+            "{{asset:/mcp_image_layout.js}}",
+            "{{asset:/mcp_image_jobs.js}}",
+            "{{asset:/mcp_bridge.js}}",
+          ],
+        },
+        ai: {
+          scripts: [
+            "{{asset:/html_to_ppt_runtime.js}}",
+            "{{asset:/presentation_host.js}}",
+            "{{asset:/local_skill_runtime.js}}",
+            "{{asset:/ai_message_renderer.js}}",
+            "{{asset:/ai_attachment_runtime.js}}",
+            "{{asset:/ai_runtime.js}}",
+            "{{asset:/image_reconstruction_runtime.js}}",
+            "{{asset:/image_native_tracer.js}}",
+            "{{asset:/image_semantic_module_runtime.js}}",
+            "{{asset:/image_precision_runtime.js}}",
+            "{{asset:/image_fast_runtime.js}}",
+            "{{asset:/mcp_scene.js}}",
+            "{{asset:/mcp_animation.js}}",
+            "{{asset:/mcp_bridge.js}}",
+          ],
+        },
+        export: {
+          scripts: ["{{asset:/screen_recorder_runtime.js}}"],
+        },
+        math: {
+          styles: ["{{asset:/vendor/katex/katex.min.css}}"],
+          scripts: ["{{asset:/vendor/katex/katex.min.js}}"],
+        },
+      });
+      const resourcePromises = new Map();
+      const featurePromises = new Map();
+
+      function loadScript(url) {
+        if (resourcePromises.has(url)) return resourcePromises.get(url);
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = url;
+          script.async = true;
+          script.dataset.startupState = "loading";
+          script.onload = () => {
+            script.dataset.startupState = "loaded";
+            resolve();
+          };
+          script.onerror = () => {
+            script.dataset.startupState = "error";
+            reject(new Error(`无法加载 ${url}`));
+          };
+          document.head.append(script);
+        });
+        resourcePromises.set(url, promise);
+        return promise;
+      }
+
+      function loadStyle(url) {
+        if (resourcePromises.has(url)) return resourcePromises.get(url);
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement("link");
+          link.rel = "stylesheet";
+          link.href = url;
+          link.dataset.startupState = "loading";
+          link.onload = () => {
+            link.dataset.startupState = "loaded";
+            resolve();
+          };
+          link.onerror = () => {
+            link.dataset.startupState = "error";
+            reject(new Error(`无法加载 ${url}`));
+          };
+          document.head.append(link);
+        });
+        resourcePromises.set(url, promise);
+        return promise;
+      }
+
+      function loadFeature(name) {
+        if (featurePromises.has(name)) return featurePromises.get(name);
+        const feature = features[name];
+        if (!feature) return Promise.reject(new Error(`未知功能模块 ${name}`));
+        const promise = Promise.all([
+          ...(feature.dependsOn || []).map(loadFeature),
+          ...(feature.styles || []).map(loadStyle),
+          ...(feature.scripts || []).map(loadScript),
+        ]).then(() => {
+          metrics[`${name}ReadyAt`] = performance.now();
+          window.dispatchEvent(new CustomEvent("unippt:feature-ready", { detail: { name } }));
+          if (name === "math") window.dispatchEvent(new Event("unippt:katex-ready"));
+        });
+        featurePromises.set(name, promise);
+        return promise;
+      }
+
+      let earlyDemoTaken = false;
+      let idleScheduled = false;
+      function publishMetrics() {
+        const navigation = performance.getEntriesByType("navigation")[0];
+        const resources = performance.getEntriesByType("resource");
+        const cutoff = metrics.firstPaintAt || performance.now();
+        const critical = resources.filter((entry) => entry.responseEnd <= cutoff + 0.01);
+        const demoResource = resources.find((entry) => entry.name.includes("/api/demo"));
+        document.documentElement.dataset.unipptStartupMetrics = JSON.stringify({
+          ...metrics,
+          domContentLoadedAt: navigation?.domContentLoadedEventEnd || null,
+          loadAt: navigation?.loadEventEnd || null,
+          criticalRequests: critical.length,
+          criticalTransferBytes: critical.reduce((sum, entry) => sum + (entry.transferSize || 0), 0),
+          criticalDecodedBytes: critical.reduce((sum, entry) => sum + (entry.decodedBodySize || 0), 0),
+          allRequestsAtSnapshot: resources.length,
+          demoResource: demoResource ? {
+            startTime: demoResource.startTime,
+            duration: demoResource.duration,
+            transferSize: demoResource.transferSize,
+          } : null,
+        });
+      }
+      const startup = {
+        metrics,
+        asset(path) { return assets[path] || path; },
+        loadFeature,
+        takeDemoResponse() {
+          if (handoffRequested) return null;
+          if (earlyDemoTaken) return null;
+          earlyDemoTaken = true;
+          return requestDemo();
+        },
+        abortDemo() { demoController.abort(); },
+        markFirstPaint() {
+          metrics.firstPaintAt = performance.now();
+          publishMetrics();
+          if (startupProfile === "legacy") return;
+          if (idleScheduled) return;
+          idleScheduled = true;
+          const idle = (callback) => {
+            if ("requestIdleCallback" in window) requestIdleCallback(callback, { timeout: 1200 });
+            else setTimeout(callback, 32);
+          };
+          // Do not let background feature downloads extend the first
+          // navigation's load event or compete with the first interaction.
+          // Render/math warm after the shell is fully loaded; presentation,
+          // recording and AI stay truly on-demand at their entry points.
+          const warmRenderFeatures = () => {
+            // The small font identity runtime is ready before the user can open
+            // a document, but still starts only after first paint. Heavier
+            // render and math modules remain idle work.
+            void loadFeature("font")
+              .catch((error) => console.warn("UniPPT deferred font runtime load failed", error));
+            idle(() => void Promise.all([loadFeature("render"), loadFeature("math")])
+              .catch((error) => console.warn("UniPPT deferred render load failed", error)));
+          };
+          if (document.readyState === "complete") warmRenderFeatures();
+          else window.addEventListener("load", warmRenderFeatures, { once: true });
+        },
+        snapshot() { return { ...metrics }; },
+      };
+      globalThis.UniPptStartup = Object.freeze(startup);
+
+      // Core scripts are independent and download in parallel. app.js starts
+      // only after both globals exist, regardless of whether DOMContentLoaded
+      // has already fired on a very fast local server.
+      const initialFeatures = startupProfile === "legacy"
+        ? ["core", "render", "presentation", "ai", "export", "math"]
+        : ["core"];
+      void Promise.all(initialFeatures.map(loadFeature))
+        .then(() => {
+          metrics.coreReadyAt = performance.now();
+          return loadScript("{{asset:/app.js}}");
+        })
+        .then(() => {
+          metrics.appReadyAt = performance.now();
+          publishMetrics();
+        })
+        .catch((error) => {
+          metrics.startupError = String(error?.message || error);
+          publishMetrics();
+          console.error("UniPPT editor core failed to load", error);
+          const showError=()=>{
+            document.body.dataset.startupState='error';
+            const surface=document.getElementById('startupSurface');if(!surface)return;
+            surface.setAttribute('aria-busy','false');surface.querySelector('h1').textContent='工作区加载失败';
+            surface.querySelector('p').textContent='请检查网络后重试。当前文稿不会被修改。';
+            const retry=document.createElement('button');retry.type='button';retry.textContent='重新加载';retry.onclick=()=>location.reload();surface.append(retry);
+            document.getElementById('status').textContent='加载失败 · 可重新加载';
+          };
+          if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',showError,{once:true});else showError();
+        });
+    })();
+  </script>
+  <link rel="stylesheet" href="{{asset:/vendor/material-symbols/material-symbols-rounded.css}}">
+  <link rel="stylesheet" href="{{asset:/style.css}}">
+</head>
+<body data-startup-state="loading">
+  <header class="office-titlebar">
+    <div class="quick-access" aria-label="快速访问工具栏">
+      <img class="app-icon" src="{{asset:/unippt-logo.svg}}" alt="UniPPT">
+      <button id="saveUdocQuick" type="button" title="保存 UDOC (Ctrl+S)" aria-label="保存 UDOC">
+        <span class="material-symbols-rounded" aria-hidden="true">save</span>
+      </button>
+      <button id="undo" type="button" title="撤销 (Ctrl+Z)" aria-label="撤销">
+        <span class="material-symbols-rounded" aria-hidden="true">undo</span>
+      </button>
+      <button id="redo" type="button" title="恢复 (Ctrl+Y)" aria-label="恢复">
+        <span class="material-symbols-rounded" aria-hidden="true">redo</span>
+      </button>
+      <button id="quickAccessHelp" class="qa-more" type="button" disabled title="快速访问栏自定义将在命令模型稳定后开放">⌄</button>
+    </div>
+    <div class="document-title">
+      <input id="deckTitle" value="演示文稿1" aria-label="演示文稿标题">
+      <span>— UniPPT</span>
+    </div>
+    <div id="officeSearchWrap" class="office-search-wrap">
+      <label class="office-search"><span>⌕</span><input id="officeSearchInput" placeholder="搜索 (Alt+Q)" aria-label="搜索当前演示文稿" aria-controls="officeSearchResults" aria-expanded="false" autocomplete="off"></label>
+      <div id="officeSearchResults" class="office-search-results" role="dialog" aria-label="搜索结果" hidden>
+        <header><output id="officeSearchSummary">输入关键词以搜索当前演示文稿</output><span>Enter 下一项</span></header>
+        <div id="officeSearchResultList" class="office-search-result-list" role="listbox"></div>
+      </div>
+    </div>
+    <div class="title-actions">
+      <button id="aiAssistantTop" class="title-ai" type="button" title="打开 U AI 演示文稿助手 (Alt+A)"><img class="title-ai-logo" src="{{asset:/unippt-logo.svg}}" alt="">U AI</button>
+      <button id="present" class="title-present" title="从当前幻灯片放映">▷ 放映</button>
+      <div id="settingsWrap" class="settings-wrap">
+        <button id="settingsButton" class="settings-button" type="button" aria-label="本机设置" title="本机设置" aria-haspopup="dialog" aria-controls="settingsMenu" aria-expanded="false">
+          <span class="settings-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></svg></span>
+        </button>
+        <section id="settingsMenu" class="settings-menu" role="dialog" aria-label="本机设置" hidden>
+          <header class="settings-summary"><span class="settings-avatar settings-avatar-large" aria-hidden="true">P</span><span><strong id="settingsName">本机工作区</strong><small id="settingsDetail">请通过文件菜单保存文稿</small></span></header>
+          <div class="settings-mcp-row"><div><strong>MCP 自动连接</strong><small id="settingsMcpStatus" aria-live="polite">默认开启，可随时关闭</small></div><button id="mcpConnect" class="settings-mcp-switch" type="button" role="switch" aria-label="MCP 自动连接" aria-describedby="settingsMcpStatus" aria-checked="true" title="本机 MCP 默认开启，仅连接本机服务">本机 MCP · 开</button></div>
+          <div class="settings-actions"><a href="/docs/" target="_blank" rel="noopener">使用文档</a><a href="/mcp-protocol.html" target="_blank" rel="noopener">本机 MCP 协议</a></div>
+          <small class="settings-privacy">仅连接本机服务，修改可撤销</small>
+        </section>
+      </div>
+    </div>
+  </header>
+
+  <nav class="ribbon-tabs" aria-label="功能区选项卡">
+    <button class="file-tab" data-ribbon="file">文件</button>
+    <button class="active" data-ribbon="home">开始</button>
+    <button data-ribbon="insert">插入</button>
+    <button data-ribbon="draw">绘图</button>
+    <button data-ribbon="design">设计</button>
+    <button data-ribbon="transitions">切换</button>
+    <button data-ribbon="animations">动画</button>
+    <button data-ribbon="slideshow">幻灯片放映</button>
+    <button data-ribbon="review">审阅</button>
+    <button data-ribbon="view">视图</button>
+    <button data-ribbon="help">帮助</button>
+    <span class="ribbon-spacer"></span>
+  </nav>
+
+  <section class="ribbon" aria-label="功能区">
+    <div class="ribbon-panel ribbon-file" data-panel="file">
+      <div class="ribbon-group file-command-group">
+        <button id="newDeck" class="ribbon-large" title="新建演示文稿">
+          <span class="ribbon-icon"><svg class="office-command-icon" viewBox="0 0 32 32" aria-hidden="true"><path class="icon-paper" d="M8.5 3.5h11l5 5v20H8.5z"/><path class="icon-fold" d="M19.5 3.5v5h5"/><path class="icon-accent-stroke" d="M4 19h10M9 14v10"/></svg></span><b>新建</b>
+        </button>
+        <button id="openFile" class="ribbon-large" title="打开 PPTX、UDOC 或无损 HTML">
+          <span class="ribbon-icon"><svg class="office-command-icon open-folder-icon" viewBox="0 0 32 32" aria-hidden="true"><path class="folder-back" d="M3.5 8.5h9l2.4 3h13.6v15H3.5z"/><path class="folder-front" d="M3.5 13.5h25l-3.2 13H6.7z"/><path class="icon-accent-stroke" d="M16 21h11M23 17l4 4-4 4"/></svg></span><b>打开</b>
+        </button>
+        <button id="saveUdoc" class="ribbon-large" title="保存为 UDOC">
+          <span class="ribbon-icon"><svg class="office-command-icon" viewBox="0 0 32 32" aria-hidden="true"><path class="icon-paper" d="M5 4h20l3 3v21H5z"/><path class="icon-dark-fill" d="M9 4h13v8H9z"/><path class="icon-white" d="M18 6h2v4h-2z"/><path class="icon-accent-fill" d="M9 18h15v10H9z"/><path class="icon-white-stroke" d="M12 22h9"/></svg></span><b>保存 UDOC</b>
+        </button>
+        <label>文件</label>
+      </div>
+      <div class="ribbon-group file-command-group">
+        <button id="savePptx" class="ribbon-large" title="保存为 PowerPoint 演示文稿">
+          <span class="ribbon-icon"><svg class="office-command-icon" viewBox="0 0 32 32" aria-hidden="true"><path class="ppt-page" d="M10 3.5h11l5 5v20H10z"/><path class="ppt-fold" d="M21 3.5v5h5"/><rect class="ppt-badge" x="3" y="12" width="16" height="15" rx="1.5"/><path class="icon-white-stroke ppt-letter" d="M8 23V16h3.1a2.4 2.4 0 0 1 0 4.8H8"/></svg></span><b>保存 PPTX</b>
+        </button>
+        <button id="exportMenuButton" class="ribbon-large" title="导出 PDF、图片、视频或无损 HTML" aria-haspopup="menu" aria-expanded="false">
+          <span class="ribbon-icon"><svg class="office-command-icon" viewBox="0 0 32 32" aria-hidden="true"><rect class="icon-paper" x="3.5" y="5" width="23" height="19" rx="1"/><path class="icon-muted-stroke" d="M4 10h22M8 7.5h.1M11 7.5h.1"/><path class="icon-accent-stroke" d="M16 27l11-11M20 16h7v7"/></svg></span><b>导出</b>
+        </button>
+        <label>导出</label>
+      </div>
+    </div>
+    <div class="ribbon-panel active" data-panel="home">
+      <div class="ribbon-group clipboard-group">
+        <button id="pasteObject" class="ribbon-large"><span class="ribbon-icon paste-icon">▣</span><b>粘贴</b><small>⌄</small></button>
+        <div class="ribbon-stack"><button id="cutObject">✂ 剪切</button><button id="copyObject">▧ 复制</button><button id="formatPainter">🖌 格式刷</button></div>
+        <label>剪贴板</label>
+      </div>
+      <div class="ribbon-group slides-group">
+        <button id="addSlide" class="ribbon-large"><span class="ribbon-icon slide-icon">＋</span><b>新建幻灯片</b><small>⌄</small></button>
+        <div class="ribbon-stack"><button id="applySlideLayout">▤ 版式</button><button id="resetSlideLayout">↺ 重置</button><button disabled title="节模型尚未纳入无损 PPTX 编辑投影">§ 节</button></div>
+        <label>幻灯片</label>
+      </div>
+      <div class="ribbon-group font-group">
+        <div class="font-row"><select id="ribbonFontFamily" aria-label="字体"><option>等线</option><option>微软雅黑</option><option>Aptos</option></select><select id="ribbonFontSize" aria-label="字号"><option>18</option><option selected>24</option><option>28</option><option>32</option><option>44</option></select><button id="growFont" title="增大字号">A⌃</button><button id="shrinkFont" title="减小字号">A⌄</button></div>
+        <div class="font-row"><button id="ribbonBold"><b>B</b></button><button id="ribbonItalic"><i>I</i></button><button id="ribbonUnderline"><u>U</u></button><button id="ribbonStrike">ab̶</button><button id="ribbonSubscript">x₂</button><button id="ribbonSuperscript">x²</button><button id="ribbonFontColor" class="font-color" title="字体颜色">A<span></span></button></div>
+        <label>字体</label>
+      </div>
+      <div class="ribbon-group paragraph-group">
+        <div class="font-row"><button id="paragraphBullets" title="项目符号">•≡</button><button id="paragraphNumbering" title="编号">1≡</button><button id="paragraphOutdent" title="减少列表级别">⇤</button><button id="paragraphIndent" title="增加列表级别">⇥</button><button id="paragraphSpacing" title="行距">↕</button></div>
+        <div class="font-row"><button id="alignLeft" title="左对齐">≡</button><button id="alignCenter" title="居中">≣</button><button id="alignRight" title="右对齐">≡</button><button id="alignJustify" title="两端对齐">☷</button><button id="verticalAlign" title="垂直对齐">▤</button></div>
+        <label>段落</label>
+      </div>
+      <div class="ribbon-group drawing-group">
+        <button id="addShape" class="ribbon-large"><span class="ribbon-icon">◇</span><b>形状</b><small>⌄</small></button>
+        <button id="bringToFront" class="ribbon-large" title="置于顶层"><span class="ribbon-icon">▧</span><b>排列</b><small>置顶</small></button>
+        <div class="ribbon-stack"><button id="shapeFill">◩ 形状填充</button><button id="shapeOutline">□ 形状轮廓</button><button id="openFormatPane" type="button" title="打开设置形状格式窗格">↗ 设置形状格式</button></div>
+        <label>绘图</label>
+      </div>
+      <div class="ribbon-group editing-group">
+        <div class="ribbon-stack"><button id="findText">⌕ 查找</button><button id="replaceText">⇄ 替换</button><button id="selectNextObject">⌁ 选择下一个对象</button></div>
+        <label>编辑</label>
+      </div>
+    </div>
+
+    <div class="ribbon-panel" data-panel="insert">
+      <div class="ribbon-group">
+        <button id="addText" class="ribbon-large"><span class="ribbon-icon">T</span><b>文本框</b></button>
+        <button id="addImage" class="ribbon-large"><span class="ribbon-icon">▧</span><b>图片</b><small>⌄</small></button>
+        <button id="captureScreen" class="ribbon-large"><span class="ribbon-icon">▦</span><b>屏幕截图</b></button>
+        <label>图像</label>
+      </div>
+      <div class="ribbon-group">
+        <button id="addTable" class="ribbon-large"><span class="ribbon-icon">▦</span><b>表格</b></button>
+        <button id="addChart" class="ribbon-large"><span class="ribbon-icon">▥</span><b>图表</b></button>
+        <button id="addSmartArt" class="ribbon-large"><span class="ribbon-icon">⬡</span><b>SmartArt</b></button>
+        <label>插图</label>
+      </div>
+      <div class="ribbon-group math-group">
+        <button id="addFormula" class="ribbon-large"><span class="ribbon-icon equation-icon">π</span><b>公式</b><small>⌄</small></button>
+        <button id="addSymbol" class="ribbon-large"><span class="ribbon-icon">Ω</span><b>符号</b><small>⌄</small></button>
+        <label>符号</label>
+      </div>
+      <div class="ribbon-group">
+        <button id="addVideo" class="ribbon-large"><span class="ribbon-icon">▣</span><b>视频</b></button>
+        <button id="addAudio" class="ribbon-large"><span class="ribbon-icon">♫</span><b>音频</b></button>
+        <button id="addDynamicContent" class="ribbon-large" title="插入可交互 HTML 或 SVG 沙箱"><span class="ribbon-icon">⌘</span><b>动态内容</b></button>
+        <label>媒体</label>
+      </div>
+    </div>
+
+    <div class="ribbon-panel" data-panel="design">
+      <div class="ribbon-group theme-group">
+        <button class="theme-chip theme-office"><span></span><b>Office</b></button>
+        <button class="theme-chip theme-dark"><span></span><b>Facet</b></button>
+        <button class="theme-chip theme-warm"><span></span><b>Ion</b></button>
+        <button class="theme-chip theme-minimal"><span></span><b>Basis</b></button>
+        <label>主题</label>
+      </div>
+      <div class="ribbon-group"><div class="ribbon-stack"><button id="cycleThemeColor">颜色⌄</button><button id="cycleThemeFont">字体⌄</button><button id="toggleThemeEffects">效果⌄</button></div><label>变体</label></div>
+      <div class="ribbon-group"><button id="toggleSlideSize" class="ribbon-large"><span class="ribbon-icon">▭</span><b>幻灯片大小</b></button><button id="slideBackground" class="ribbon-large"><span class="ribbon-icon">▨</span><b>设置背景格式</b></button><label>自定义</label></div>
+    </div>
+
+    <div class="ribbon-panel draw-ribbon" data-panel="draw">
+      <div class="ribbon-group draw-tools-group">
+        <button id="drawSelect" class="draw-command active" type="button" data-draw-tool="select"><span class="draw-tool-icon">↖</span><b>选择</b></button>
+        <button id="drawPen" class="draw-command" type="button" data-draw-tool="pen"><span class="draw-tool-icon pen-tip">●</span><b>钢笔</b></button>
+        <button id="drawHighlighter" class="draw-command" type="button" data-draw-tool="highlighter"><span class="draw-tool-icon highlighter-tip">▰</span><b>荧光笔</b></button>
+        <button id="drawEraser" class="draw-command" type="button" data-draw-tool="eraser"><span class="draw-tool-icon eraser-tip">▱</span><b>橡皮擦</b></button>
+        <label>绘图工具</label>
+      </div>
+      <div class="ribbon-group draw-options-group">
+        <label class="draw-color-field"><span>颜色</span><input id="drawColor" type="color" value="#202124" aria-label="墨迹颜色"></label>
+        <label class="draw-width-field"><span>粗细</span><input id="drawWidth" type="range" min="1" max="24" step="1" value="4" aria-label="墨迹粗细"><output id="drawWidthValue">4 px</output></label>
+        <label>笔选项</label>
+      </div>
+      <div class="ribbon-group draw-convert-group">
+        <button id="convertInkShape" class="draw-command" type="button"><span class="draw-tool-icon">◇</span><b>墨迹转换为形状</b></button>
+        <button id="clearSlideInk" class="draw-command" type="button"><span class="draw-tool-icon">⌫</span><b>清除本页墨迹</b></button>
+        <label>转换</label>
+      </div>
+    </div>
+    <div class="ribbon-panel transition-ribbon" data-panel="transitions">
+      <div class="ribbon-group transition-preview-group"><button id="previewTransition" class="ribbon-large"><span class="ribbon-icon">▷</span><b>预览</b></button><label>预览</label></div>
+      <div class="ribbon-group transition-gallery">
+        <button data-transition="none"><span class="transition-icon none">∅</span><b>无</b></button>
+        <button data-transition="cut"><span class="transition-icon cut">▮</span><b>切出</b></button>
+        <button data-transition="fade"><span class="transition-icon fade">▧</span><b>淡出</b></button>
+        <button data-transition="push"><span class="transition-icon push">▥</span><b>推进</b></button>
+        <button data-transition="wipe"><span class="transition-icon wipe">◩</span><b>擦除</b></button>
+        <button data-transition="split"><span class="transition-icon split">▦</span><b>分割</b></button>
+        <button data-transition="cover"><span class="transition-icon cover">▣</span><b>覆盖</b></button>
+        <button data-transition="dissolve"><span class="transition-icon dissolve">▩</span><b>溶解</b></button>
+        <label>切换到此幻灯片</label>
+      </div>
+      <div class="ribbon-group transition-options">
+        <label class="transition-field"><span>效果选项</span><select id="transitionDirection"><option value="">默认</option><option value="l">自右向左</option><option value="r">自左向右</option><option value="u">自下向上</option><option value="d">自上向下</option></select></label>
+        <button id="applyTransitionAll" type="button">应用到全部</button>
+        <label>选项</label>
+      </div>
+      <div class="ribbon-group transition-timing">
+        <label class="transition-field"><span>持续时间</span><input id="transitionDuration" type="number" min="0.05" max="10" step="0.05" value="0.70"></label>
+        <label class="transition-check"><input id="transitionAdvanceClick" type="checkbox" checked> 单击鼠标时</label>
+        <label class="transition-check"><input id="transitionAdvanceAfter" type="checkbox"> 设置自动换片时间</label>
+        <label class="transition-field transition-after"><span>之后</span><input id="transitionAfterSeconds" type="number" min="0" max="86400" step="0.25" value="5.00" disabled><em>秒</em></label>
+        <label>计时</label>
+      </div>
+    </div>
+    <div class="ribbon-panel animation-ribbon" data-panel="animations">
+      <div class="ribbon-group animation-preview-group"><button id="previewAnimations" class="ribbon-large"><span class="ribbon-icon">▷</span><b>预览</b></button><label>预览</label></div>
+      <div class="ribbon-group animation-gallery">
+        <button data-add-animation="appear"><span class="animation-star green">★</span><b>出现</b></button>
+        <button data-add-animation="fade"><span class="animation-star green">★</span><b>淡化</b></button>
+        <button data-add-animation="flyIn"><span class="animation-star green">★</span><b>飞入</b></button>
+        <button data-add-animation="wipe"><span class="animation-star green">★</span><b>擦除</b></button>
+        <button data-add-animation="randomBars"><span class="animation-star green">★</span><b>随机线条</b></button>
+        <button data-add-animation="dissolve"><span class="animation-star green">★</span><b>溶解</b></button>
+        <button data-add-animation="wheel"><span class="animation-star green">★</span><b>轮子</b></button>
+        <button data-add-animation="circle"><span class="animation-star green">★</span><b>圆形</b></button>
+        <button data-add-animation="split"><span class="animation-star green">★</span><b>劈裂</b></button>
+        <button data-add-animation="spin"><span class="animation-star yellow">★</span><b>陀螺旋</b></button>
+        <button data-add-animation="growShrink"><span class="animation-star yellow">★</span><b>放大/缩小</b></button>
+        <button data-add-animation="zoom"><span class="animation-star red">★</span><b>缩放</b></button>
+        <label>动画</label>
+      </div>
+      <div class="ribbon-group animation-tools"><div class="ribbon-stack"><button id="toggleAnimationPane">☰ 动画窗格</button><button id="addMotionPath">⌁ 动作路径</button><button id="removeAnimation">× 删除动画</button></div><label>高级动画</label></div>
+      <div class="ribbon-group animation-timing"><div class="timing-field"><label>开始</label><select id="ribbonAnimationTrigger"><option value="onClick">单击时</option><option value="withPrevious">与上一动画同时</option><option value="afterPrevious">上一动画之后</option></select></div><div class="timing-field"><label>持续时间</label><input id="ribbonAnimationDuration" type="number" min="0.01" step="0.05" value="0.5"></div><div class="timing-field"><label>延迟</label><input id="ribbonAnimationDelay" type="number" min="0" step="0.05" value="0"></div><label>计时</label></div>
+    </div>
+    <div class="ribbon-panel ribbon-placeholder slideshow-ribbon" data-panel="slideshow">
+      <button id="presentRibbon" type="button" title="从第一张幻灯片开始放映（F5）">▷ 从头开始</button>
+      <button id="presentCurrentRibbon" type="button" title="从当前幻灯片开始放映（Shift+F5）">从当前幻灯片</button>
+      <button id="presentAutoRibbon" type="button" title="从当前幻灯片自动放映；全部动画完成后自动换页">▶ 自动放映</button>
+      <button id="setupSlideShow" type="button" title="设置放映范围、循环与计时">设置幻灯片放映</button>
+      <button id="rehearseTimings" type="button" title="从头开始排练并记录每页计时">排练计时</button>
+    </div>
+    <div class="ribbon-panel ribbon-placeholder" data-panel="review"><button id="spellCheck">拼写检查</button><button id="accessibilityCheck">检查辅助功能</button><button id="focusNotes">新建批注/备注</button><button disabled title="比较演示文稿尚未纳入无损差异模型">比较</button></div>
+    <div class="ribbon-panel ribbon-placeholder" data-panel="view"><button id="normalViewRibbon">普通视图</button><button id="outlineViewRibbon">大纲视图</button><button id="slideSorterView">幻灯片浏览</button><button id="notesView">备注页</button><button id="toggleGridLines">网格线</button></div>
+    <div class="ribbon-panel ribbon-placeholder" data-panel="help"><button id="openHelp">帮助与快捷键</button><button id="showFeatureStatus">功能状态</button><button id="sendFeedback">反馈</button></div>
+  </section>
+
+  <div id="exportMenuPopup" class="export-menu-popover" role="menu" aria-label="导出演示文稿" hidden>
+    <button id="exportHtml" type="button" role="menuitem"><span class="material-symbols-rounded" aria-hidden="true">html</span><span><b>无损 HTML</b><small>完整场景、动画和可重新编辑结构</small></span></button>
+    <button id="exportPdf" type="button" role="menuitem"><span class="material-symbols-rounded" aria-hidden="true">picture_as_pdf</span><span><b>打印 / PDF</b><small>浏览器原生打印 · 矢量分页</small></span></button>
+    <button id="exportImages" type="button" role="menuitem"><span class="material-symbols-rounded" aria-hidden="true">photo_library</span><span><b>PNG 图片压缩包</b><small>1920 像素逐页 PNG 与清单</small></span></button>
+    <button id="exportVideoFast" type="button" role="menuitem"><span class="material-symbols-rounded" aria-hidden="true">speed</span><span><b>MP4 极速视频</b><small>30 FPS · 低延迟预览与快速交付</small></span></button>
+    <button id="exportVideo" type="button" role="menuitem"><span class="material-symbols-rounded" aria-hidden="true">movie</span><span><b>MP4 高保真视频</b><small>1080p / 30 FPS · 动画、转场连续拼接</small></span></button>
+    <button id="exportVideoRecording" type="button" role="menuitem"><span class="material-symbols-rounded" aria-hidden="true">screen_record</span><span><b>浏览器录屏视频</b><small>零依赖 · 直接录制放映画面与音频</small></span></button>
+  </div>
+
+  <div id="slideContextMenu" class="slide-context-menu" role="menu" aria-label="幻灯片操作" hidden>
+    <button id="slideContextNew" type="button" role="menuitem"><span class="material-symbols-rounded" aria-hidden="true">add</span><span>新建幻灯片</span></button>
+    <button id="slideContextDuplicate" type="button" role="menuitem"><span class="material-symbols-rounded" aria-hidden="true">content_copy</span><span>复制幻灯片</span></button>
+    <div class="slide-context-separator" role="separator"></div>
+    <button id="slideContextMoveUp" type="button" role="menuitem"><span class="material-symbols-rounded" aria-hidden="true">arrow_upward</span><span>上移幻灯片</span></button>
+    <button id="slideContextMoveDown" type="button" role="menuitem"><span class="material-symbols-rounded" aria-hidden="true">arrow_downward</span><span>下移幻灯片</span></button>
+    <div class="slide-context-separator" role="separator"></div>
+    <button id="slideContextTransition" type="button" role="menuitem"><span class="material-symbols-rounded" aria-hidden="true">transition_slide</span><span>设置切换效果…</span></button>
+    <button id="slideContextDelete" class="danger" type="button" role="menuitem"><span class="material-symbols-rounded" aria-hidden="true">delete</span><span>删除幻灯片</span></button>
+  </div>
+
+  <main class="office-workspace">
+    <aside class="slide-pane">
+      <div class="pane-tabs"><button id="slidesPaneTab" class="active">幻灯片</button><button id="outlinePaneTab">大纲</button><span></span><button id="addSlideRail" title="新建幻灯片">＋</button></div>
+      <div id="slideList" class="slide-list"></div>
+      <div class="slide-actions">
+        <button id="duplicateSlide" title="复制幻灯片">▣</button>
+        <button id="moveSlideUp" title="上移幻灯片">↑</button>
+        <button id="moveSlideDown" title="下移幻灯片">↓</button>
+        <button id="deleteSlide" title="删除幻灯片">⌫</button>
+      </div>
+    </aside>
+
+    <section class="editor-shell">
+      <div id="canvasViewport" class="canvas-viewport">
+        <section id="startupSurface" class="startup-surface" aria-live="polite" aria-busy="true"><img src="{{asset:/unippt-logo.svg}}" alt="" width="44" height="44"><h1>正在打开 UniPPT</h1><p>正在准备工作区…</p></section>
+        <div id="canvasScaler" class="canvas-scaler">
+          <div id="slideStage" class="slide-stage" tabindex="0"></div>
+        </div>
+      </div>
+      <div class="notes-strip"><span>备注</span><textarea id="slideNotes" placeholder="单击此处添加备注"></textarea></div>
+    </section>
+
+    <aside class="utility-rail" aria-label="演示文稿快捷工具">
+      <button id="utilityTemplates" type="button" data-target-ribbon="design" title="打开主题与版式">
+        <span class="material-symbols-rounded" aria-hidden="true">dashboard</span><b>模板</b>
+      </button>
+      <button id="utilityBlocks" type="button" data-target-ribbon="insert" title="插入内容块">
+        <span class="material-symbols-rounded" aria-hidden="true">widgets</span><b>内容块</b>
+      </button>
+      <button id="utilityMedia" type="button" data-target-ribbon="insert" title="插入图片、视频或音频">
+        <span class="material-symbols-rounded" aria-hidden="true">perm_media</span><b>媒体</b>
+      </button>
+      <button id="utilityUploads" type="button" title="上传并打开演示文稿">
+        <span class="material-symbols-rounded" aria-hidden="true">drive_folder_upload</span><b>上传</b>
+      </button>
+      <button id="utilityConvert" type="button" data-target-ribbon="file" title="导出 PDF、图片、视频、PPTX、UDOC 或无损 HTML">
+        <span class="material-symbols-rounded" aria-hidden="true">convert_to_text</span><b>转换</b>
+      </button>
+    </aside>
+
+    <aside class="format-pane" hidden>
+      <div class="format-title"><strong>设置形状格式</strong><button id="closeFormatPane" type="button" aria-label="关闭格式窗格" title="关闭格式窗格">×</button></div>
+      <div id="emptyInspector" class="empty-inspector"><span class="empty-icon">◇</span><strong>未选择任何对象</strong><p>选择幻灯片上的对象以设置其格式。</p></div>
+      <form id="objectInspector" hidden>
+        <details open><summary>大小与位置</summary>
+          <div class="field-grid"><label>高度<input id="propH" type="number" step="1" min="1"></label><label>宽度<input id="propW" type="number" step="1" min="1"></label><label>水平位置<input id="propX" type="number" step="1"></label><label>垂直位置<input id="propY" type="number" step="1"></label></div>
+          <label>旋转<input id="propRotation" type="number" step="1"></label>
+        </details>
+        <details open><summary>形状选项</summary>
+          <label>名称<input id="propName"></label>
+          <div class="color-field"><label>填充</label><input id="propFill" type="color"><span>纯色填充</span></div>
+          <div class="color-field"><label>文字</label><input id="propColor" type="color"><span>字体颜色</span></div>
+          <label>字号<input id="propFontSize" type="number" min="6" max="200"></label>
+          <div class="toggle-row"><button id="propBold" type="button"><b>B</b></button><button id="propItalic" type="button"><i>I</i></button><button id="editFormula" type="button" hidden>π 编辑公式</button><button id="deleteObject" type="button" class="danger">删除对象</button></div>
+        </details>
+      </form>
+    </aside>
+
+    <aside id="animationPane" class="animation-pane" hidden>
+      <div class="animation-pane-title"><strong>动画窗格</strong><div><button id="playAnimationPane" title="从头播放">▷ 全部播放</button><button id="closeAnimationPane" title="关闭窗格">×</button></div></div>
+      <div class="animation-pane-toolbar"><button id="animationMoveUp" title="提前">↑</button><button id="animationMoveDown" title="延后">↓</button><span>时间线</span><output id="animationTotal">0.00 秒</output></div>
+      <div class="animation-ruler"><i>0s</i><i>1s</i><i>2s</i><i>3s</i><i>4s+</i></div>
+      <div id="animationEmpty" class="animation-empty"><span>★</span><strong>此幻灯片没有动画</strong><p>选择画布对象，然后从“动画”选项卡添加效果。</p></div>
+      <div id="animationList" class="animation-list"></div>
+      <form id="animationInspector" class="animation-inspector" hidden>
+        <label>效果<select id="animationEffect"><option value="appear">出现</option><option value="fade">淡化</option><option value="flyIn">飞入</option><option value="wipe">擦除</option><option value="randomBars">随机线条</option><option value="dissolve">溶解</option><option value="wheel">轮子</option><option value="circle">圆形</option><option value="split">劈裂</option><option value="zoom">缩放</option><option value="spin">陀螺旋</option><option value="growShrink">放大/缩小</option><option value="motionPath">动作路径</option><option value="media">媒体</option><option value="custom">保留的自定义效果</option></select></label>
+        <label>类别<select id="animationClass"><option value="entrance">进入</option><option value="emphasis">强调</option><option value="exit">退出</option><option value="motionPath">动作路径</option><option value="media">媒体</option><option value="custom">自定义</option></select></label>
+        <label>开始<select id="animationTrigger"><option value="onClick">单击时</option><option value="withPrevious">与上一动画同时</option><option value="afterPrevious">上一动画之后</option></select></label>
+        <div class="animation-number-row"><label>持续时间（秒）<input id="animationDuration" type="number" min="0.01" step="0.05"></label><label>延迟（秒）<input id="animationDelay" type="number" min="0" step="0.05"></label></div>
+        <label>方向<select id="animationDirection"><option value="">默认</option><option value="left">自左侧</option><option value="right">自右侧</option><option value="up">自顶部</option><option value="down">自底部</option><option value="horizontal">水平</option><option value="vertical">垂直</option><option value="in">向内</option><option value="out">向外</option><option value="outHorizontal">水平向外</option><option value="inHorizontal">水平向内</option><option value="outVertical">垂直向外</option><option value="inVertical">垂直向内</option><option value="1">1 轮辐</option><option value="2">2 轮辐</option><option value="3">3 轮辐</option><option value="4">4 轮辐</option><option value="8">8 轮辐</option></select></label>
+        <button id="deleteAnimation" type="button" class="danger">删除此动画</button>
+      </form>
+    </aside>
+  </main>
+
+  <footer class="office-statusbar">
+    <span id="status">正在载入…</span><button id="accessibilityStatus">辅助功能: 良好</button><button id="notesStatus">备注</button><span id="pluginTools" class="plugin-tools" aria-label="插件工具"></span><span class="status-spacer"></span><button id="normalView" class="status-view active" title="普通视图" aria-label="普通视图">▣</button><button id="viewUdocStructure" class="status-view" title="查看 UDoc 结构" aria-label="查看 UDoc 结构">▦</button><button id="readingView" class="status-view" title="阅读视图" aria-label="阅读视图">▤</button><label class="zoom-controls" aria-label="幻灯片缩放"><button id="zoomOut" type="button" title="缩小 (Ctrl+-)" aria-label="缩小">−</button><input id="zoom" type="range" min="10" max="500" step="1" value="55" aria-label="缩放百分比"><button id="zoomIn" type="button" title="放大 (Ctrl++)" aria-label="放大">＋</button><output id="zoomValue" for="zoom">55%</output></label><button id="fitSlide" type="button" title="使幻灯片适合当前窗口 (Ctrl+0)" aria-label="适应窗口" aria-pressed="true">⊡</button>
+  </footer>
+
+  <input id="fileInput" type="file" accept=".pptx,.udoc,.html,.htm" hidden>
+  <input id="imageInput" type="file" accept="image/*,.svg,.emf,image/svg+xml,image/x-emf" hidden>
+  <input id="videoInput" type="file" accept="video/mp4,video/quicktime,video/x-msvideo,video/x-ms-wmv,.mp4,.mov,.avi,.wmv" hidden>
+  <input id="audioInput" type="file" accept="audio/mpeg,audio/wav,audio/mp4,.mp3,.wav,.m4a" hidden>
+  <input id="ribbonFontColorInput" type="color" value="#172033" hidden>
+  <input id="shapeFillInput" type="color" value="#ffffff" hidden>
+  <input id="shapeOutlineInput" type="color" value="#172033" hidden>
+  <input id="slideBackgroundInput" type="color" value="#ffffff" hidden>
+  <div id="toast" class="toast" role="status"></div>
+  <div id="loading" class="loading" hidden>
+    <div class="loading-card" role="status" aria-live="polite">
+      <div class="spinner"></div>
+      <p id="loadingText">正在解析 PPTX…</p>
+      <div id="loadingProgress" class="loading-progress" hidden aria-label="导出进度">
+        <span id="loadingProgressBar"></span>
+      </div>
+      <small id="loadingDetail" hidden></small>
+    </div>
+  </div>
+
+  <dialog id="videoExportDialog" class="command-dialog video-export-dialog">
+    <form method="dialog" class="command-window video-export-window">
+      <header><div><strong>导出视频</strong><small>逐帧渲染当前演示文稿的动画、换页效果和时间线</small></div><button id="closeVideoExport" value="cancel" title="关闭">×</button></header>
+      <div class="video-export-grid">
+        <label><span>导出方式</span><select id="videoExportEngine"><option value="server" selected>服务端逐帧渲染</option><option value="browser">浏览器录屏</option></select><small id="videoExportEngineHint">服务端用无头 Chromium 逐帧渲染并交给 FFmpeg 编码，画面与时间轴逐帧精确</small></label>
+        <label id="videoExportProfileField"><span>渲染质量</span><select id="videoExportProfile"><option value="fast">极速预览</option><option value="balanced">均衡</option><option value="quality">高保真</option></select><small id="videoProfileHint">完整分辨率高质量帧直传编码器，适合最终交付</small></label>
+        <label id="videoExportResolutionField"><span>清晰度</span><select id="videoExportResolution"><option value="1280x720">720p · 1280 × 720</option><option value="1920x1080" selected>1080p · 1920 × 1080</option><option value="2560x1440">2K · 2560 × 1440</option><option value="3840x2160">4K · 3840 × 2160</option></select><small id="videoExportResolutionHint">清晰度越高，逐帧捕获和编码耗时越长</small></label>
+        <label id="videoExportFpsField"><span>帧率</span><select id="videoExportFps"><option value="24">24 FPS · 电影感</option><option value="30" selected>30 FPS · 标准</option><option value="60">60 FPS · 更流畅</option></select><small id="videoExportFpsHint">分页转场和对象动画均按此帧率采样</small></label>
+        <label class="video-export-audio"><span>演示音频</span><span class="video-export-check"><input id="videoExportMuted" type="checkbox"> 静音导出</span><small>默认保留幻灯片中的音频；勾选后生成无音轨视频</small></label>
+      </div>
+      <div class="video-export-summary"><span class="material-symbols-rounded" aria-hidden="true">movie</span><div><b id="videoExportSummary">1080p · 30 FPS · 高保真</b><small id="videoExportSummaryNote">将自动播放每页完整动画，最后一页结束后完成视频。</small></div></div>
+      <footer><span>导出不依赖 Microsoft PowerPoint，可在 Windows、Linux 与 macOS 服务端运行。</span><button value="cancel">取消</button><button id="confirmVideoExport" type="button" class="office-primary">开始导出</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="findReplaceDialog" class="command-dialog">
+    <form method="dialog" class="command-window">
+      <header><div><strong>查找和替换</strong><small>搜索当前演示文稿中的可编辑文字</small></div><button id="closeFindReplace" value="cancel" title="关闭">×</button></header>
+      <label>查找内容<input id="findQuery" autocomplete="off"></label>
+      <label id="replaceField">替换为<input id="replaceQuery" autocomplete="off"></label>
+      <footer><output id="findResultCount">尚未查找</output><button id="findNext" type="button">查找下一个</button><button id="replaceAll" type="button" class="office-primary">全部替换</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="helpDialog" class="command-dialog">
+    <form method="dialog" class="command-window help-window">
+      <header><div><strong>UniPPT 快捷键与功能状态</strong><small>按钮只有在模型可无损表达时才启用</small></div><button value="cancel" title="关闭">×</button></header>
+      <div class="help-command-grid"><b>Ctrl+C / X / V</b><span>复制、剪切、粘贴场景对象</span><b>Ctrl+F</b><span>查找和替换</span><b>Ctrl+S</b><span>保存自包含 UDoc</span><b>F5 / Shift+F5</b><span>从头 / 从当前页放映</span><b>方向键</b><span>移动对象；放映时逐动画节点导航</span><b>Delete</b><span>删除所选对象</span></div>
+      <footer><span>UDoc、PPTX 与无损 HTML 共用同一场景模型和 OPC 快照。</span><button value="default" class="office-primary">关闭</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="formulaDialog" class="formula-dialog">
+    <form method="dialog" class="formula-window">
+      <header><span class="equation-badge">π</span><div><strong>插入公式</strong><small>LaTeX 源码将同步保存为原生 Office Math</small></div><button id="closeFormula" value="cancel" title="关闭">×</button></header>
+      <div class="formula-presets"><button type="button" data-latex="E=mc^2">E=mc²</button><button type="button" data-latex="\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}">求根公式</button><button type="button" data-latex="\\int_a^b f(x)\\,dx">积分</button><button type="button" data-latex="\\sum_{i=1}^{n} i">求和</button><button type="button" data-latex="\\begin{bmatrix}a&b\\\\c&d\\end{bmatrix}">矩阵</button></div>
+      <label class="formula-source"><span>LaTeX</span><span class="formula-delimiter-help"><code>$...$</code> 行内公式 <code>$$...$$</code> 行间公式</span><textarea id="formulaSource" spellcheck="false">$$E=mc^2$$</textarea></label>
+      <div class="formula-options"><label><input id="formulaDisplay" type="checkbox" checked> 行间公式（独立展示）</label><span id="formulaNativeStatus">将生成 OMML</span></div>
+      <div id="formulaPreview" class="formula-preview"></div>
+      <footer><button id="cancelFormula" value="cancel">取消</button><button id="commitFormula" value="default" class="office-primary">插入公式</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="insertObjectDialog" class="insert-object-dialog">
+    <form method="dialog" class="insert-object-window">
+      <header><div><strong id="insertObjectTitle">插入对象</strong><small id="insertObjectSubtitle">对象将以可编辑场景和原生 PPTX 结构保存</small></div><button id="closeInsertObject" value="cancel" title="关闭">×</button></header>
+      <div id="insertObjectBody" class="insert-object-body"></div>
+      <footer><button id="cancelInsertObject" value="cancel">取消</button><button id="commitInsertObject" value="default" class="office-primary">插入</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="udocStructureDialog" class="udoc-structure-dialog">
+    <div class="udoc-structure-window">
+      <header><div><strong>.udoc 块结构（实时）</strong><small><span>app: UniPPT</span><span>unidoc_type: pptx</span></small></div><button id="closeUdocStructure" type="button" title="关闭">×</button></header>
+      <div class="udoc-structure-summary"><span id="udocSceneCacheState">场景缓存</span><span id="udocSourceCacheState">原生 PPTX 缓存</span><span id="udocExportCacheState">导出载荷</span></div>
+      <div id="udocStructureContent" class="udoc-structure-tree" tabindex="0" role="tree" aria-label="UDOC 实时结构"></div>
+      <footer><span id="udocStructureRevision" class="udoc-structure-revision"></span><button id="copyUdocStructure" type="button">复制完整 JSON</button><button id="confirmUdocStructure" type="button" class="office-primary">关闭</button></footer>
+    </div>
+  </dialog>
+
+  <dialog id="slideShowSettingsDialog" class="slide-show-dialog">
+    <form method="dialog" class="slide-show-window">
+      <header><div><strong>设置幻灯片放映</strong><small>选择放映范围、放映方式和换片方式</small></div><button id="closeSlideShowSettings" type="button" title="关闭">×</button></header>
+      <div class="slide-show-options">
+        <fieldset>
+          <legend>放映幻灯片</legend>
+          <label><input id="slideShowAll" type="radio" name="slideShowRange" value="all" checked> 全部</label>
+          <label><input id="slideShowRange" type="radio" name="slideShowRange" value="range"> 从</label>
+          <div class="slide-show-range-fields"><input id="slideShowFrom" type="number" min="1" value="1" aria-label="起始幻灯片"><span>到</span><input id="slideShowTo" type="number" min="1" value="1" aria-label="结束幻灯片"></div>
+        </fieldset>
+        <fieldset>
+          <legend>放映选项</legend>
+          <label><input id="slideShowAutoPlay" type="checkbox"> 自动放映（本页全部动画完成后换页）</label>
+          <label><input id="slideShowLoop" type="checkbox"> 循环放映，按 Esc 键终止</label>
+          <label><input id="slideShowUseTimings" type="checkbox" checked> 使用排练计时</label>
+          <label><input id="slideShowFullscreen" type="checkbox" checked> 全屏放映</label>
+        </fieldset>
+      </div>
+      <footer><button id="cancelSlideShowSettings" type="button">取消</button><button id="applySlideShowSettings" type="button" class="office-primary">确定</button></footer>
+    </form>
+  </dialog>
+
+  <dialog id="rehearsalResultDialog" class="slide-show-dialog rehearsal-result-dialog">
+    <div class="slide-show-window">
+      <header><div><strong>排练计时完成</strong><small>可将本次计时写入每张幻灯片的自动换片时间</small></div></header>
+      <div class="rehearsal-result-body"><p id="rehearsalSummary"></p><div id="rehearsalTimingList"></div></div>
+      <footer><button id="discardRehearsalTimings" type="button">放弃计时</button><button id="applyRehearsalTimings" type="button" class="office-primary">保留计时</button></footer>
+    </div>
+  </dialog>
+
+  <div id="miniFormatToolbar" class="mini-format-toolbar" role="toolbar" aria-label="选区快捷格式" hidden>
+    <div class="mini-format-row">
+      <select id="miniFontFamily" aria-label="浮动字体" title="字体"></select>
+      <input id="miniFontSize" type="number" min="1" max="400" step="0.5" aria-label="浮动字号" title="字号（磅）">
+      <button type="button" data-mini="grow" aria-label="增大选区字号" title="增大字号">A⌃</button>
+      <button type="button" data-mini="shrink" aria-label="减小选区字号" title="减小字号">A⌄</button>
+      <button type="button" data-mini="close" aria-label="关闭快捷格式" title="关闭（Esc）">×</button>
+    </div>
+    <div class="mini-format-row">
+      <button type="button" data-mini="bold" aria-label="选区加粗" aria-pressed="false" title="加粗"><b>B</b></button>
+      <button type="button" data-mini="italic" aria-label="选区斜体" aria-pressed="false" title="斜体"><i>I</i></button>
+      <button type="button" data-mini="underline" aria-label="选区下划线" aria-pressed="false" title="下划线"><u>U</u></button>
+      <span class="mini-format-divider"></span>
+      <button type="button" data-mini="left" aria-label="选区左对齐" title="左对齐"><svg width="19" height="19" viewBox="0 0 20 20" aria-hidden="true"><path d="M2 4H18M2 8H13M2 12H18M2 16H13" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
+      <button type="button" data-mini="center" aria-label="选区居中" title="居中"><svg width="19" height="19" viewBox="0 0 20 20" aria-hidden="true"><path d="M2 4H18M5 8H15M2 12H18M5 16H15" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
+      <button type="button" data-mini="right" aria-label="选区右对齐" title="右对齐"><svg width="19" height="19" viewBox="0 0 20 20" aria-hidden="true"><path d="M2 4H18M7 8H18M2 12H18M7 16H18" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
+      <label class="mini-format-color" title="字体颜色"><span>A</span><input id="miniFontColor" type="color" aria-label="选区字体颜色"></label>
+      <button type="button" data-mini="more" aria-label="更多选区格式" title="更多格式">⋯</button>
+    </div>
+  </div>
+
+  <div id="presenter" class="presenter" role="dialog" aria-modal="true" aria-label="幻灯片放映" hidden>
+    <div id="presentStage" class="present-stage"></div>
+    <div id="presentationBoundaryNotice" class="presentation-boundary-notice" role="status" aria-live="polite" aria-atomic="true" hidden>
+      <span class="presentation-boundary-icon" aria-hidden="true">✓</span>
+      <span class="presentation-boundary-copy"><strong>已经到底了</strong><small>最后一张 · 按 Esc 退出放映</small></span>
+    </div>
+    <div class="present-controls" role="toolbar" aria-label="幻灯片放映控制">
+      <button id="prevSlidePresent" class="present-page-jump" type="button" aria-keyshortcuts="Control+Home">&#8676;</button>
+      <button id="prevPresent" type="button">‹</button><span id="presentCount"></span><button id="nextPresent" type="button">›</button>
+      <button id="nextSlidePresent" class="present-page-jump" type="button" aria-keyshortcuts="Control+End">&#8677;</button>
+      <button id="presentAutoPlay" class="present-auto-play" type="button" aria-label="自动放映" aria-pressed="false" aria-keyshortcuts="A">▶</button>
+      <span id="rehearsalClock" class="rehearsal-clock" hidden></span>
+      <span class="present-audio-controls">
+        <button id="presentMute" type="button" aria-label="静音" aria-pressed="false"><span class="present-volume-glyph" aria-hidden="true">🔊</span></button>
+        <input id="presentVolume" type="range" min="0" max="100" step="1" value="100" aria-label="放映音量" aria-valuetext="100%">
+      </span>
+      <button id="closePresent" type="button">退出</button>
+    </div>
+  </div>
+</body>
+</html>

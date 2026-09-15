@@ -1,0 +1,12 @@
+{
+  "name": "unippt-local-tools",
+  "version": "0.1.0",
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "engines": {"node": ">=22"},
+  "scripts": {
+    "test": "node --test web/*.test.js tools/*.test.cjs",
+    "docs": "node tools/build_mcp_docs.cjs"
+  },
+  "dependencies": {"sharp": "0.35.4"}
+}

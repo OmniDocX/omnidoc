@@ -1,0 +1,11 @@
+{
+  "name": "@unippt/html-video-renderer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Cross-platform UniPPT lossless HTML capture provider",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "playwright-core": "1.54.2"
+  }
+}

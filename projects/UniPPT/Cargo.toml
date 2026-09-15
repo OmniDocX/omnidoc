@@ -1,0 +1,29 @@
+[workspace]
+members = ["crates/unippt-core", "crates/unippt-server"]
+exclude = ["vendor/vecmeta"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license-file = "LICENSE"
+rust-version = "1.88"
+
+[workspace.dependencies]
+base64 = "0.22"
+brotli = "8"
+dotenvy = "0.15"
+md-5 = "0.10"
+quick-xml = "0.39"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["raw_value"] }
+sha2 = "0.10"
+thiserror = "2"
+tiny_http = "0.12"
+ureq = "2"
+zip = { version = "7", default-features = false, features = ["deflate-flate2-zlib-rs"] }
+pptx = { package = "unippt-pptx", path = "vendor/pptx" }
+
+[profile.release]
+lto = "thin"
+strip = "symbols"

@@ -1,0 +1,36 @@
+stages:
+  - verify
+
+rust:
+  stage: verify
+  image: rust:1.88.0-bookworm
+  before_script:
+    - apt-get update
+    - apt-get install -y --no-install-recommends python3 python3-venv
+    - python3 -m venv .venv
+    - .venv/bin/python -m pip install -r tools/math/requirements.txt
+    - export UNIPPT_PYTHON="$CI_PROJECT_DIR/.venv/bin/python"
+  script:
+    - cargo test --workspace --locked
+
+web:
+  stage: verify
+  image: node:22-bookworm
+  before_script:
+    - apt-get update
+    - apt-get install -y --no-install-recommends ffmpeg
+    - ffmpeg -version
+    - ffprobe -version
+  script:
+    - node --check web/app.js
+    - node --test web/*.test.js
+
+public-boundary:
+  stage: verify
+  image: python:3.12-slim
+  before_script:
+    - apt-get update
+    - apt-get install -y --no-install-recommends git
+  script:
+    - python tools/test_public_boundary.py -v
+    - python tools/check_public_boundary.py --history

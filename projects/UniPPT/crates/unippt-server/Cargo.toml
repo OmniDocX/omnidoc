@@ -1,0 +1,24 @@
+[package]
+name = "unippt-server"
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+base64.workspace = true
+brotli.workspace = true
+dotenvy.workspace = true
+quick-xml.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+tiny_http.workspace = true
+ureq.workspace = true
+zip.workspace = true
+unippt-core = { path = "../unippt-core" }
+# Vendored, pure-Rust lossless SVG <-> EMF bridge. Native EMF stays
+# authoritative while the exact SVG source is used by browser renderers.
+emf2svg = { path = "../../vendor/vecmeta/crates/emf2svg" }
+svg2emf = { path = "../../vendor/vecmeta/crates/svg2emf" }

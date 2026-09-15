@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="UniPPT 本机编辑、图片转可编辑 PPT、文件保存和 MCP 使用指南。"><title>使用指南 · UniPPT 文档</title><link rel="icon" href="/unippt-logo.svg" type="image/svg+xml"><link rel="stylesheet" href="/docs/docs.css"></head><body><a class="skip" href="#content">跳到正文</a><header class="doc-header"><a class="brand" href="/docs/"><img src="/unippt-logo.svg" width="32" height="32" alt="">UniPPT <span>文档</span></a><nav aria-label="文档分类"><a href="/docs/" aria-current="page">使用指南</a><a href="/mcp-protocol.html">MCP 协议</a><a href="/docs/integration.html">本机 AI 与 MCP</a></nav><a class="editor-link" href="/">打开编辑器</a></header><div class="doc-layout"><aside><p class="eyebrow">本页目录</p><nav aria-label="本页章节"><a href="#section-2">启动与保存</a><a href="#section-3">基础编辑</a><a href="#section-4">导入与导出</a><a href="#section-5">U AI 与图片转 PPT</a><a href="#section-6">本机 MCP</a></nav><div class="downloads"><p class="eyebrow">离线材料</p><a href="/docs/unippt-integration.md" download>完整接入手册 ↗</a><a href="/mcp-tools.json" download>本机工具 Schema ↗</a><a href="/mcp-runtime-schemas.json" download>原生操作与模块 Schema ↗</a></div></aside><main id="content" tabindex="-1"><div class="doc-meta">UniPPT / 使用指南 <span>更新于 2026-09-16</span></div><h1 id="section-1">UniPPT 本机版使用指南</h1>
+<h2 id="section-2">启动与保存</h2>
+<p>在项目目录运行 <code>cargo run -p unippt-server --locked</code>，用浏览器打开本机服务（默认端口 8141）。直接进入编辑器，无需注册账户。</p>
+<ul><li>使用文件菜单新建文稿或打开本机 PPTX、UDOC、HTML 文件。</li><li>文稿编辑发生在当前浏览器，服务缓存用于格式往返和资源读取。请用“保存 UDOC”或导出 PPTX 保存到本机；关闭网页前先保存。</li><li>UDOC 与 UniPPT 无损 HTML 携带可再次导入的数据。外部自由 HTML 通过浏览器布局编译成支持的可编辑对象；动态脚本不等同于原生幻灯片。</li></ul>
+<h2 id="section-3">基础编辑</h2>
+<p>缩略图与大纲用于切换页面；Ribbon 功能区支持文本、形状、图片、表格、图表、公式、对齐、层级和页面设置。使用格式窗格调整对象，使用撤销/重做恢复修改。导入的复杂 Office 对象按实际支持范围保留或编辑。</p>
+<p>动画窗格用于设置支持的对象动画与时间顺序；放映从当前页开始。录屏和音视频功能使用浏览器与本机工具。</p>
+<h2 id="section-4">导入与导出</h2>
+<div class="table-scroll" role="region" aria-label="格式 / 本机功能与依赖" tabindex="0"><table><thead><tr><th scope="col">格式</th><th scope="col">本机功能与依赖</th></tr></thead><tbody><tr><td>PPTX</td><td>导入、原生对象编辑与导出；保留未编辑源部件</td></tr><tr><td>UDOC / HTML</td><td>本机保存、携带原生数据的便携文稿与放映</td></tr><tr><td>PDF / 图片</td><td>通过本机渲染工具生成</td></tr><tr><td>视频</td><td>逐帧导出依赖 Chromium 和 FFmpeg；浏览器也可录屏</td></tr><tr><td>公式</td><td>Python 公式依赖以及 KaTeX 预览</td></tr></tbody></table></div>
+<p>导出成功只说明文件已生成。复杂文稿应检查实际渲染、文本和对象可编辑性。</p>
+<h2 id="section-5">U AI 与图片转 PPT</h2>
+<p>U AI 支持本机配置的模型服务。模型接口、名称和密钥由使用者提供；普通编辑不依赖模型。</p>
+<p>图片重建会生成文本、形状、公式和必要的局部图片。对照原图检查字体、位置和细节，并修复局部问题；对象数量不代表视觉还原准确。</p>
+<h2 id="section-6">本机 MCP</h2>
+<p>右上角“本机设置”中可开关 MCP 自动连接。默认开启，同源标签页同步选择。客户端 stdio 进程启动本机桥接；切换文稿会撤销旧会话，关闭开关即停止自动连接。</p>
+<p>MCP 只连接默认端口的本机编辑器和回环桥接服务。接入方法见 <a href="/docs/integration.html">本机 AI 与 MCP</a>，工具契约见 <a href="/mcp-protocol.html">MCP 协议</a>。</p><footer>文档描述当前本机版接口与安全边界；运行时能力查询优先，不包含访问凭据。<a href="#content">返回正文顶部 ↑</a></footer></main></div></body></html>
