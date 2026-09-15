@@ -1,7 +1,7 @@
 # vecmeta — source and license notice
 
 The current vecmeta source in this directory is an OmniDoc-owned component,
-licensed under the accompanying [OmniDoc Non-Commercial Source License 1.0](LICENSE).
+licensed under the accompanying [PolyForm Noncommercial 1.0.0](LICENSE).
 Canonical project: <https://github.com/OmniDocX/vecmeta>.
 
 On 2026-09-15 the maintainer confirmed original authorship and authority to
@@ -14,8 +14,13 @@ emf2svg, and svg2emf. The standalone project also includes the emfsvg CLI.
 This snapshot does not include the standalone project's external corpus or
 its newer compatibility-report API additions.
 
-Non-commercial use is free under LICENSE. Commercial use, including internal
-business use by companies in China and elsewhere, requires prior written
-permission. Contact cc@omnidoc.top or add 13184071590 on WeChat.
-Complete applications are reviewed and answered within 48 hours; silence or
-submission does not grant permission.
+Current first-party code uses [PolyForm Noncommercial 1.0.0](LICENSE).
+Required Notice: Copyright (c) 2026 OmniDoc project contributors. https://omnidoc.top/
+
+First-party code and documentation: PolyForm Noncommercial 1.0.0 (LICENSE).
+Commercial uses outside its permitted purposes require a separate paid written
+commercial license. Contact: cc@omnidoc.top; WeChat: 13184071590.
+Third-party components retain their own licenses and notices.
+Valid earlier grants are not revoked. See docs/LICENSING.md.
+
+[Commercial application](docs/COMMERCIAL_LICENSE.md).

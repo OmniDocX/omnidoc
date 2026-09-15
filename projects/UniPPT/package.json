@@ -2,7 +2,7 @@
   "name": "unippt-local-tools",
   "version": "0.1.0",
   "private": true,
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "engines": {"node": ">=22"},
   "scripts": {
     "test": "node --test web/*.test.js tools/*.test.cjs",

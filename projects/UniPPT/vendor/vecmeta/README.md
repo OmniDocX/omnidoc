@@ -8,8 +8,8 @@ vecmeta 是 OmniDoc 旗下的原生 Rust SVG ↔ EMF 矢量转换引擎。本目
 
 vecmeta is OmniDoc's native Rust SVG ↔ EMF conversion engine. This directory contains five library crates integrated into UniPPT. The standalone command-line tool, API definitions, build instructions, and compatibility specifications are available in the official repository linked above.
 
-当前组件采用 [OmniDoc 非商业源码许可](LICENSE)。第三方组件及旧版本的既有许可保持不变，详见 [来源与许可说明](LICENSE-NOTICE.md)。
+当前组件采用 [PolyForm Noncommercial 1.0.0](LICENSE)。第三方组件及旧版本的既有许可保持不变，详见 [来源与许可说明](LICENSE-NOTICE.md)。
 
-Non-commercial use is free under [LICENSE](LICENSE). Commercial use requires permission, including internal business use by companies in China and elsewhere. Earlier valid grants remain unaffected.
+Uses permitted by [PolyForm Noncommercial 1.0.0](LICENSE) are free. Commercial uses outside its permitted purposes require a separate paid written license. See [licensing scope](docs/LICENSING.md) and [commercial applications](docs/COMMERCIAL_LICENSE.md). Earlier valid grants remain unaffected.
 
 **商业联系 / Commercial contact:** [cc@omnidoc.top](mailto:cc@omnidoc.top) · 微信 / WeChat: **13184071590**。完整申请 48 小时内审核答复 / Complete applications reviewed and answered within 48 hours; no automatic approval.

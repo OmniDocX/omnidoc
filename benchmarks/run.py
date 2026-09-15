@@ -60,7 +60,7 @@ def main():
             "min_ms": min(values), "max_ms": max(values), "validation": validations}]}
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(record, indent=2, ensure_ascii=False)+"\n", encoding="utf-8")
+    output.write_text(json.dumps(record, indent=2, ensure_ascii=False)+"\n", encoding="utf-8", newline="\n")
     print(f"{PROJECT}: {files} files / {size} bytes, median {statistics.median(values):.2f} ms, all checks passed")
 
 
