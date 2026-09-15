@@ -31,3 +31,4 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           python3 tools/test_public_boundary.py -v
           python3 tools/check_public_boundary.py --history
+          python3 benchmarks/verify_results.py

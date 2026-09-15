@@ -1,0 +1,540 @@
+{
+  "schema_version": 1,
+  "project": "vecmeta",
+  "measured_at_utc": "2026-09-15T23:03:36.508770+00:00",
+  "environment": {
+    "os": "Windows",
+    "os_release": "10",
+    "os_version": "10.0.19045",
+    "architecture": "AMD64",
+    "logical_cpus": 8,
+    "python": "3.13.11",
+    "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+    "source_commit": "96acc4608d644d8137fd334412e82bb2ba7c5a0a",
+    "binary": "emfsvg.exe",
+    "binary_bytes": 1203712,
+    "binary_sha256": "4307dd5fb86f9297633ad94f347ff2e541aca6449bb6d863c51ef72c8c39a6e5",
+    "harness_sha256": "d2fe16bfd5175524ad9fecc0990a13f82a6d209dbbfd4b4bdeb05db4caca8140",
+    "physical_cores": 4,
+    "cpu": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
+    "ram_gib": 31.7,
+    "os_caption": "Microsoft Windows 10 专业版"
+  },
+  "build_profile": "cargo build --release --locked -p emfsvg-cli; default opt-level=3, lto=true",
+  "warmups_per_case": 2,
+  "samples_per_case": 7,
+  "p95_method": "nearest rank: sorted[ceil(0.95*n)-1]",
+  "concurrency": 1,
+  "cases": [
+    {
+      "operation": "svg_to_emf_cli",
+      "size": 100,
+      "samples_ms": [
+        25.526,
+        24.0948,
+        25.8545,
+        25.0997,
+        25.0237,
+        25.2867,
+        25.0205
+      ],
+      "median_ms": 25.0997,
+      "p95_ms": 25.8545,
+      "min_ms": 24.0948,
+      "max_ms": 25.8545,
+      "validation": [
+        {
+          "bytes": 15364,
+          "sha256": "60148256be4e4dfd6430f5e0a99209a2151acfb455370e2fed28412b3898068c",
+          "emf_header_checked": true,
+          "input_bytes": 5210,
+          "input_sha256": "eec3b2fc2ffb867f39c52df603b5335399fb7f2090133c4a7b3721b8fa5288bb"
+        },
+        {
+          "bytes": 15364,
+          "sha256": "60148256be4e4dfd6430f5e0a99209a2151acfb455370e2fed28412b3898068c",
+          "emf_header_checked": true,
+          "input_bytes": 5210,
+          "input_sha256": "eec3b2fc2ffb867f39c52df603b5335399fb7f2090133c4a7b3721b8fa5288bb"
+        },
+        {
+          "bytes": 15364,
+          "sha256": "60148256be4e4dfd6430f5e0a99209a2151acfb455370e2fed28412b3898068c",
+          "emf_header_checked": true,
+          "input_bytes": 5210,
+          "input_sha256": "eec3b2fc2ffb867f39c52df603b5335399fb7f2090133c4a7b3721b8fa5288bb"
+        },
+        {
+          "bytes": 15364,
+          "sha256": "60148256be4e4dfd6430f5e0a99209a2151acfb455370e2fed28412b3898068c",
+          "emf_header_checked": true,
+          "input_bytes": 5210,
+          "input_sha256": "eec3b2fc2ffb867f39c52df603b5335399fb7f2090133c4a7b3721b8fa5288bb"
+        },
+        {
+          "bytes": 15364,
+          "sha256": "60148256be4e4dfd6430f5e0a99209a2151acfb455370e2fed28412b3898068c",
+          "emf_header_checked": true,
+          "input_bytes": 5210,
+          "input_sha256": "eec3b2fc2ffb867f39c52df603b5335399fb7f2090133c4a7b3721b8fa5288bb"
+        },
+        {
+          "bytes": 15364,
+          "sha256": "60148256be4e4dfd6430f5e0a99209a2151acfb455370e2fed28412b3898068c",
+          "emf_header_checked": true,
+          "input_bytes": 5210,
+          "input_sha256": "eec3b2fc2ffb867f39c52df603b5335399fb7f2090133c4a7b3721b8fa5288bb"
+        },
+        {
+          "bytes": 15364,
+          "sha256": "60148256be4e4dfd6430f5e0a99209a2151acfb455370e2fed28412b3898068c",
+          "emf_header_checked": true,
+          "input_bytes": 5210,
+          "input_sha256": "eec3b2fc2ffb867f39c52df603b5335399fb7f2090133c4a7b3721b8fa5288bb"
+        }
+      ]
+    },
+    {
+      "operation": "emf_to_svg_cli",
+      "size": 100,
+      "samples_ms": [
+        22.1155,
+        22.3595,
+        21.5621,
+        23.1176,
+        21.4859,
+        24.2867,
+        22.4275
+      ],
+      "median_ms": 22.3595,
+      "p95_ms": 24.2867,
+      "min_ms": 21.4859,
+      "max_ms": 24.2867,
+      "validation": [
+        {
+          "bytes": 17873,
+          "sha256": "e5bf07751b415f6af56c1029638855b6ad0a53f6d16b170b5a212f630c2d079a",
+          "paths": 100
+        },
+        {
+          "bytes": 17873,
+          "sha256": "e5bf07751b415f6af56c1029638855b6ad0a53f6d16b170b5a212f630c2d079a",
+          "paths": 100
+        },
+        {
+          "bytes": 17873,
+          "sha256": "e5bf07751b415f6af56c1029638855b6ad0a53f6d16b170b5a212f630c2d079a",
+          "paths": 100
+        },
+        {
+          "bytes": 17873,
+          "sha256": "e5bf07751b415f6af56c1029638855b6ad0a53f6d16b170b5a212f630c2d079a",
+          "paths": 100
+        },
+        {
+          "bytes": 17873,
+          "sha256": "e5bf07751b415f6af56c1029638855b6ad0a53f6d16b170b5a212f630c2d079a",
+          "paths": 100
+        },
+        {
+          "bytes": 17873,
+          "sha256": "e5bf07751b415f6af56c1029638855b6ad0a53f6d16b170b5a212f630c2d079a",
+          "paths": 100
+        },
+        {
+          "bytes": 17873,
+          "sha256": "e5bf07751b415f6af56c1029638855b6ad0a53f6d16b170b5a212f630c2d079a",
+          "paths": 100
+        }
+      ]
+    },
+    {
+      "operation": "geometry_roundtrip_cli",
+      "size": 100,
+      "samples_ms": [
+        25.3825,
+        21.5162,
+        23.8289,
+        21.5629,
+        24.7779,
+        22.914,
+        25.9471
+      ],
+      "median_ms": 23.8289,
+      "p95_ms": 25.9471,
+      "min_ms": 21.5162,
+      "max_ms": 25.9471,
+      "validation": [
+        {
+          "geometry_check": "elements: 100 (source) -> 100 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 100 (source) -> 100 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 100 (source) -> 100 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 100 (source) -> 100 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 100 (source) -> 100 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 100 (source) -> 100 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 100 (source) -> 100 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "operation": "svg_to_emf_cli",
+      "size": 1000,
+      "samples_ms": [
+        26.2247,
+        25.6896,
+        26.7264,
+        46.8408,
+        26.625,
+        26.4058,
+        26.8719
+      ],
+      "median_ms": 26.625,
+      "p95_ms": 46.8408,
+      "min_ms": 25.6896,
+      "max_ms": 46.8408,
+      "validation": [
+        {
+          "bytes": 152164,
+          "sha256": "89ec2c8746adbab9f411e4a80e148ccb87226de5822c4206abe2209cdbfa97ee",
+          "emf_header_checked": true,
+          "input_bytes": 52362,
+          "input_sha256": "9b805bea608bdf622c8716d59a6408ac8da90f9cc79985d8a3b6cf32958ef0e4"
+        },
+        {
+          "bytes": 152164,
+          "sha256": "89ec2c8746adbab9f411e4a80e148ccb87226de5822c4206abe2209cdbfa97ee",
+          "emf_header_checked": true,
+          "input_bytes": 52362,
+          "input_sha256": "9b805bea608bdf622c8716d59a6408ac8da90f9cc79985d8a3b6cf32958ef0e4"
+        },
+        {
+          "bytes": 152164,
+          "sha256": "89ec2c8746adbab9f411e4a80e148ccb87226de5822c4206abe2209cdbfa97ee",
+          "emf_header_checked": true,
+          "input_bytes": 52362,
+          "input_sha256": "9b805bea608bdf622c8716d59a6408ac8da90f9cc79985d8a3b6cf32958ef0e4"
+        },
+        {
+          "bytes": 152164,
+          "sha256": "89ec2c8746adbab9f411e4a80e148ccb87226de5822c4206abe2209cdbfa97ee",
+          "emf_header_checked": true,
+          "input_bytes": 52362,
+          "input_sha256": "9b805bea608bdf622c8716d59a6408ac8da90f9cc79985d8a3b6cf32958ef0e4"
+        },
+        {
+          "bytes": 152164,
+          "sha256": "89ec2c8746adbab9f411e4a80e148ccb87226de5822c4206abe2209cdbfa97ee",
+          "emf_header_checked": true,
+          "input_bytes": 52362,
+          "input_sha256": "9b805bea608bdf622c8716d59a6408ac8da90f9cc79985d8a3b6cf32958ef0e4"
+        },
+        {
+          "bytes": 152164,
+          "sha256": "89ec2c8746adbab9f411e4a80e148ccb87226de5822c4206abe2209cdbfa97ee",
+          "emf_header_checked": true,
+          "input_bytes": 52362,
+          "input_sha256": "9b805bea608bdf622c8716d59a6408ac8da90f9cc79985d8a3b6cf32958ef0e4"
+        },
+        {
+          "bytes": 152164,
+          "sha256": "89ec2c8746adbab9f411e4a80e148ccb87226de5822c4206abe2209cdbfa97ee",
+          "emf_header_checked": true,
+          "input_bytes": 52362,
+          "input_sha256": "9b805bea608bdf622c8716d59a6408ac8da90f9cc79985d8a3b6cf32958ef0e4"
+        }
+      ]
+    },
+    {
+      "operation": "emf_to_svg_cli",
+      "size": 1000,
+      "samples_ms": [
+        25.8779,
+        25.516,
+        24.7354,
+        25.9331,
+        25.7535,
+        26.3888,
+        25.5122
+      ],
+      "median_ms": 25.7535,
+      "p95_ms": 26.3888,
+      "min_ms": 24.7354,
+      "max_ms": 26.3888,
+      "validation": [
+        {
+          "bytes": 190969,
+          "sha256": "e6c79f7fd5f6ca3e52dcd3a518e6e8da98899008c7997de513307615f5871c49",
+          "paths": 1000
+        },
+        {
+          "bytes": 190969,
+          "sha256": "e6c79f7fd5f6ca3e52dcd3a518e6e8da98899008c7997de513307615f5871c49",
+          "paths": 1000
+        },
+        {
+          "bytes": 190969,
+          "sha256": "e6c79f7fd5f6ca3e52dcd3a518e6e8da98899008c7997de513307615f5871c49",
+          "paths": 1000
+        },
+        {
+          "bytes": 190969,
+          "sha256": "e6c79f7fd5f6ca3e52dcd3a518e6e8da98899008c7997de513307615f5871c49",
+          "paths": 1000
+        },
+        {
+          "bytes": 190969,
+          "sha256": "e6c79f7fd5f6ca3e52dcd3a518e6e8da98899008c7997de513307615f5871c49",
+          "paths": 1000
+        },
+        {
+          "bytes": 190969,
+          "sha256": "e6c79f7fd5f6ca3e52dcd3a518e6e8da98899008c7997de513307615f5871c49",
+          "paths": 1000
+        },
+        {
+          "bytes": 190969,
+          "sha256": "e6c79f7fd5f6ca3e52dcd3a518e6e8da98899008c7997de513307615f5871c49",
+          "paths": 1000
+        }
+      ]
+    },
+    {
+      "operation": "geometry_roundtrip_cli",
+      "size": 1000,
+      "samples_ms": [
+        30.6465,
+        30.2112,
+        47.8526,
+        30.3984,
+        32.836,
+        29.3509,
+        29.7612
+      ],
+      "median_ms": 30.3984,
+      "p95_ms": 47.8526,
+      "min_ms": 29.3509,
+      "max_ms": 47.8526,
+      "validation": [
+        {
+          "geometry_check": "elements: 1000 (source) -> 1000 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 1000 (source) -> 1000 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 1000 (source) -> 1000 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 1000 (source) -> 1000 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 1000 (source) -> 1000 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 1000 (source) -> 1000 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 1000 (source) -> 1000 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        }
+      ]
+    },
+    {
+      "operation": "svg_to_emf_cli",
+      "size": 10000,
+      "samples_ms": [
+        107.5759,
+        118.4749,
+        118.0538,
+        105.7965,
+        102.7888,
+        101.384,
+        101.5846
+      ],
+      "median_ms": 105.7965,
+      "p95_ms": 118.4749,
+      "min_ms": 101.384,
+      "max_ms": 118.4749,
+      "validation": [
+        {
+          "bytes": 1520164,
+          "sha256": "afef0b0b2039286e61b2cbe3b20000752298bd0a02c89293fdcf0a46ae910c69",
+          "emf_header_checked": true,
+          "input_bytes": 532873,
+          "input_sha256": "573a729563ac2b3841a2362f38d7ffc2cc22307edd689bf526fdc74c842b6d55"
+        },
+        {
+          "bytes": 1520164,
+          "sha256": "afef0b0b2039286e61b2cbe3b20000752298bd0a02c89293fdcf0a46ae910c69",
+          "emf_header_checked": true,
+          "input_bytes": 532873,
+          "input_sha256": "573a729563ac2b3841a2362f38d7ffc2cc22307edd689bf526fdc74c842b6d55"
+        },
+        {
+          "bytes": 1520164,
+          "sha256": "afef0b0b2039286e61b2cbe3b20000752298bd0a02c89293fdcf0a46ae910c69",
+          "emf_header_checked": true,
+          "input_bytes": 532873,
+          "input_sha256": "573a729563ac2b3841a2362f38d7ffc2cc22307edd689bf526fdc74c842b6d55"
+        },
+        {
+          "bytes": 1520164,
+          "sha256": "afef0b0b2039286e61b2cbe3b20000752298bd0a02c89293fdcf0a46ae910c69",
+          "emf_header_checked": true,
+          "input_bytes": 532873,
+          "input_sha256": "573a729563ac2b3841a2362f38d7ffc2cc22307edd689bf526fdc74c842b6d55"
+        },
+        {
+          "bytes": 1520164,
+          "sha256": "afef0b0b2039286e61b2cbe3b20000752298bd0a02c89293fdcf0a46ae910c69",
+          "emf_header_checked": true,
+          "input_bytes": 532873,
+          "input_sha256": "573a729563ac2b3841a2362f38d7ffc2cc22307edd689bf526fdc74c842b6d55"
+        },
+        {
+          "bytes": 1520164,
+          "sha256": "afef0b0b2039286e61b2cbe3b20000752298bd0a02c89293fdcf0a46ae910c69",
+          "emf_header_checked": true,
+          "input_bytes": 532873,
+          "input_sha256": "573a729563ac2b3841a2362f38d7ffc2cc22307edd689bf526fdc74c842b6d55"
+        },
+        {
+          "bytes": 1520164,
+          "sha256": "afef0b0b2039286e61b2cbe3b20000752298bd0a02c89293fdcf0a46ae910c69",
+          "emf_header_checked": true,
+          "input_bytes": 532873,
+          "input_sha256": "573a729563ac2b3841a2362f38d7ffc2cc22307edd689bf526fdc74c842b6d55"
+        }
+      ]
+    },
+    {
+      "operation": "emf_to_svg_cli",
+      "size": 10000,
+      "samples_ms": [
+        57.0955,
+        56.2443,
+        95.5277,
+        59.4826,
+        55.7451,
+        63.3424,
+        55.903
+      ],
+      "median_ms": 57.0955,
+      "p95_ms": 95.5277,
+      "min_ms": 55.7451,
+      "max_ms": 95.5277,
+      "validation": [
+        {
+          "bytes": 1953461,
+          "sha256": "50a285b3e3d67e0572cb5389fdf2132a71b95345bf206ead672096b476622938",
+          "paths": 10000
+        },
+        {
+          "bytes": 1953461,
+          "sha256": "50a285b3e3d67e0572cb5389fdf2132a71b95345bf206ead672096b476622938",
+          "paths": 10000
+        },
+        {
+          "bytes": 1953461,
+          "sha256": "50a285b3e3d67e0572cb5389fdf2132a71b95345bf206ead672096b476622938",
+          "paths": 10000
+        },
+        {
+          "bytes": 1953461,
+          "sha256": "50a285b3e3d67e0572cb5389fdf2132a71b95345bf206ead672096b476622938",
+          "paths": 10000
+        },
+        {
+          "bytes": 1953461,
+          "sha256": "50a285b3e3d67e0572cb5389fdf2132a71b95345bf206ead672096b476622938",
+          "paths": 10000
+        },
+        {
+          "bytes": 1953461,
+          "sha256": "50a285b3e3d67e0572cb5389fdf2132a71b95345bf206ead672096b476622938",
+          "paths": 10000
+        },
+        {
+          "bytes": 1953461,
+          "sha256": "50a285b3e3d67e0572cb5389fdf2132a71b95345bf206ead672096b476622938",
+          "paths": 10000
+        }
+      ]
+    },
+    {
+      "operation": "geometry_roundtrip_cli",
+      "size": 10000,
+      "samples_ms": [
+        207.613,
+        206.0389,
+        208.3944,
+        224.2916,
+        205.7944,
+        186.1853,
+        182.3181
+      ],
+      "median_ms": 206.0389,
+      "p95_ms": 224.2916,
+      "min_ms": 182.3181,
+      "max_ms": 224.2916,
+      "validation": [
+        {
+          "geometry_check": "elements: 10000 (source) -> 10000 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 10000 (source) -> 10000 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 10000 (source) -> 10000 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 10000 (source) -> 10000 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 10000 (source) -> 10000 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 10000 (source) -> 10000 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        },
+        {
+          "geometry_check": "elements: 10000 (source) -> 10000 (normalized); fixed-point geometry: OK",
+          "tolerance": 1e-06
+        }
+      ]
+    }
+  ],
+  "workload": "Alternating solid rectangles and triangle paths; no text/fonts, images, gradients or source encapsulation",
+  "timing_boundary": "Whole CLI process: startup, file I/O, conversion and process exit; output validation excluded; warm OS file cache",
+  "lossless_source_embedding": false
+}

@@ -1,43 +1,82 @@
-# OmniDoc · 国产应用项目源码合集
+# OmniDoc — Source Collection
 
-**这是纯国产 app project。** OmniDoc 汇集 OmniDoc 旗下自主开发应用的公开源码版本，方便了解项目、下载源码与本机体验。
+**English** | [简体中文](README.zh-CN.md)
 
-## 主站与旗下项目
+[OmniDoc](https://omnidoc.top/) · [GitHub](https://github.com/OmniDocX)
 
-**官方网站：[omnidoc.top](https://omnidoc.top)** · [English](README.en.md) · [另一合集入口](https://github.com/OmniDocX/omnidocx)
+**Pinned source snapshots for OmniDoc's China-developed office projects.**
 
-| 项目 | 功能 | 本仓库源码副本 | 独立仓库 |
+OmniDoc brings together buildable copies of UniPPT, UniCell and vecmeta for local presentation, spreadsheet and vector conversion workflows. These are independently developed OmniDoc projects; third-party dependencies retain their own origins and licenses.
+
+## Project positioning
+
+**Microsoft 365 (Office 365) and WPS Office** are the reference office products. Our ambition is to build the most complete China-developed office platform with publicly available source and reproducible engineering evidence. This is a development objective; see the [product comparison](docs/COMPARISON.md) for current scope and evidence. First-party code uses a non-commercial source license, detailed below.
+
+## Performance
+
+<!-- BENCHMARK:START -->
+Environment: Windows 10 10.0.19045, Intel Core i7-1165G7 (4 cores / 8 threads), 31.70 GiB RAM, Python 3.13.11. Component binaries use Rust 1.97.1 release builds. Each case has two warmups and seven measured iterations, run sequentially. P95 uses nearest rank and equals the maximum with seven observations. Raw data retains every measured sample, including slow observations.
+
+| Project | Operation | Size | Median ms | P95 ms |
+| --- | --- | ---: | ---: | ---: |
+| UniPPT | PPTX export | 100 slides | 139.41 | 316.91 |
+| UniPPT | PPTX import, cache miss | 100 slides | 813.36 | 1721.34 |
+| UniCell | CSV import + calculation | 10,000 rows | 20217.27 | 28130.84 |
+| UniCell | XLSX export | 10,000 rows | 452.73 | 557.95 |
+| UniCell | Batch edit + recalculation | 10,000 rows | 19081.38 | 23292.38 |
+| vecmeta | SVG → EMF, CLI | 10,000 primitives | 105.80 | 118.47 |
+| vecmeta | EMF → SVG, CLI | 10,000 primitives | 57.10 | 95.53 |
+
+[Full report and source verification benchmark](benchmarks/README.md)
+
+Measurements come from a shared workstation without full control of background load; timings may not increase monotonically with size. HTTP cases exclude browser rendering; vecmeta includes CLI startup and file I/O. Large CSV import is an observed bottleneck; XLSX export latency does not represent import or recalculation speed. Office 365 and WPS were not timed, and no competitor speed ratio is reported.
+<!-- BENCHMARK:END -->
+
+## Included projects
+
+| Project | Purpose | Source and documentation | Performance report |
 | --- | --- | --- | --- |
-| UniPPT | 本机演示文稿编辑、PPTX 导入导出、可选 AI 与 MCP | [projects/UniPPT](projects/UniPPT) | [OmniDocX/UniPPT](https://github.com/OmniDocX/UniPPT) |
-| UniCell | 本机电子表格、公式、格式与 XLSX/CSV/UDOC/HTML 转换 | [projects/unicell](projects/unicell) | [OmniDocX/unicell](https://github.com/OmniDocX/unicell) |
-| vecmeta | SVG / EMF 等矢量格式转换组件 | [projects/vecmeta](projects/vecmeta) | [OmniDocX/vecmeta](https://github.com/OmniDocX/vecmeta) |
+| UniPPT | Local presentation editing and PPTX conversion | [English](projects/UniPPT/README.md) · [中文](projects/UniPPT/README.zh-CN.md) | [Benchmark](projects/UniPPT/benchmarks/README.md) |
+| UniCell | Local spreadsheets, calculation and format conversion | [English](projects/unicell/README.md) · [中文](projects/unicell/README.zh-CN.md) | [Benchmark](projects/unicell/benchmarks/README.md) |
+| vecmeta | SVG/EMF conversion libraries and CLI | [English](projects/vecmeta/README.md) · [中文](projects/vecmeta/README.zh-CN.md) | [Benchmark](projects/vecmeta/benchmarks/README.md) |
 
-这是包含真实源码文件的快照合集，可直接克隆或下载 ZIP。每个项目的 README、源码、构建文件和许可证都保留在对应子目录。项目使用的第三方组件保持独立署名和许可证；国产应用项目定位不表示所有依赖都为国产。
+PolyglotPDF is excluded. The `projects/` directories contain ordinary copied files. Build each component independently and update the provenance manifest when refreshing snapshots.
 
-## 快速使用
+## Quick start
 
 ```sh
 git clone https://github.com/OmniDocX/omnidoc.git
 cd omnidoc
+python tools/verify_copies.py
+cd projects/UniPPT
+cargo run --release --locked -p unippt-server
 ```
 
-进入对应 `projects/` 子目录，按照该项目 README 安装依赖和运行。本仓库不提供一个统一应用进程：例如 UniCell 可运行：
+Open http://127.0.0.1:8141. Consult UniCell's own documentation for its launch command and optional dependencies. This collection does not provide a combined office-suite server.
 
-```sh
-cd projects/unicell
-cargo run --locked --manifest-path server/Cargo.toml
-```
+## Provenance and integrity
 
-UniPPT 的公开副本使用本机基础版；UniCell 副本已移除 R2、云存储、共享编辑与托管账号。合集**不收录 PolyglotPDF**。
+[sources.lock.json](sources.lock.json) records public source repositories, commit IDs and a SHA-256 for every copied file. `python tools/verify_copies.py` checks the tracked file set and file contents. Each project retains its license, third-party notices and raw benchmark observations.
 
-## 版本与同步
+The public applications use local files and loopback services. R2, cloud storage, collaborative editing, shared links and centralized accounts are outside the public edition.
 
-本次快照日期：2026-09-16。完整来源提交与逐文件 SHA-256 记录在 [sources.lock.json](sources.lock.json)。副本不是子模块，不会自动随独立仓库更新；需要更新时应重新取得公开版本，并一并更新清单。
+## OmniDoc ecosystem
 
-在仓库根目录执行 `python tools/verify_copies.py` 可确认源码副本与记录的快照一致。合集 CI 检查副本完整性与发布边界，各应用的构建与功能测试见其独立仓库。
+| Project | Purpose | Website / source |
+| --- | --- | --- |
+| OmniDoc | Main product portal | [omnidoc.top](https://omnidoc.top/) |
+| UniDoc | Document authoring | [app.unidoc.top](https://app.unidoc.top/) |
+| UniPPT | Presentations | [Editor](https://unippt.unidoc.top/) · [Source](https://github.com/OmniDocX/UniPPT) |
+| UniCell | Spreadsheets | [Editor](https://unicell.unidoc.top/) · [Source](https://github.com/OmniDocX/unicell) |
+| UniMail | Email, calendar and contacts | [unimail.omnidoc.top](https://unimail.omnidoc.top/) |
+| UniPic | Image and vector editing | [pic.unidoc.top](https://pic.unidoc.top/) |
+| vecmeta | SVG ↔ EMF conversion | [Source](https://github.com/OmniDocX/vecmeta) |
+| Source collections | Pinned copies of the three published components | [omnidoc](https://github.com/OmniDocX/omnidoc) · [omnidocx](https://github.com/OmniDocX/omnidocx) |
 
-## 许可与联系
+Hosted products may offer features beyond the public local editions. Their availability and terms are defined by each product.
 
-自有合集文档采用 [OmniDoc 非商业源码许可 1.0](LICENSE)。各子项目以其目录内 LICENSE 及第三方声明为准；复制不会改变已有授权。符合协议的非商业使用免费，商业使用需事先书面许可。这是源码可见模式，不是 OSI 批准的开源许可。
+## License and commercial use
 
-商业授权：**cc@omnidoc.top** · 微信 **13184071590**。授权范围以书面确认为准，通常 48 小时内答复。
+First-party code and documentation use the [OmniDoc Non-Commercial Source License 1.0](LICENSE). Qualifying non-commercial use is free. Commercial use, including internal business use by companies in China or elsewhere, requires prior written permission. This is a source-available license, not an OSI-approved open-source license. Third-party components retain their own terms; prior lawful grants for earlier releases remain unaffected.
+
+Commercial contact: [cc@omnidoc.top](mailto:cc@omnidoc.top) · WeChat: **13184071590**. Complete applications receive a response within 48 hours; submission or silence does not grant permission.

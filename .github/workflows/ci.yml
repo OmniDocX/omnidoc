@@ -13,4 +13,5 @@ jobs:
         with:
           python-version: '3.12'
       - run: python tools/verify_copies.py
+      - run: python benchmarks/verify_results.py
       - run: python tools/check_public_boundary.py --history
