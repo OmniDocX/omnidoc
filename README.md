@@ -2,7 +2,7 @@
 
 # OmniDoc
 
-**Presentations, spreadsheets and vector conversion. Build your office tools from source.**
+**Office software built in China, focused on editing, compatibility and performance.**
 
 **English** | [简体中文](README.zh-CN.md)
 
@@ -14,9 +14,11 @@
 
 </div>
 
-OmniDoc brings together **UniPPT, UniCell and vecmeta**: two office applications you can run locally, plus a Rust component connecting SVG and EMF. Explore and build them in one repository, then integrate through their AI, MCP or library interfaces.
+OmniDoc is an office software project developed in China. We focus on document, spreadsheet and presentation workflows, with particular attention to editing, file compatibility and performance.
 
-The source collection for OmniDoc’s China-developed application projects. Visit [omnidoc.top](https://omnidoc.top/) for the full product family.
+This repository contains the source code for **UniPPT, UniCell and vecmeta**. UniPPT is a presentation editor, UniCell is a spreadsheet editor and calculation engine, and vecmeta converts between SVG and EMF. Each project includes build instructions and performance measurements and can be built and run independently.
+
+Explore our products and online services at [omnidoc.top](https://omnidoc.top/).
 
 ![OmniDoc project family](docs/images/overview.svg)
 
