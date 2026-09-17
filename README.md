@@ -1,86 +1,134 @@
-# OmniDoc — Source Collection
+<div align="center">
+
+# OmniDoc
+
+**Presentations, spreadsheets and vector conversion. Build your office tools from source.**
 
 **English** | [简体中文](README.zh-CN.md)
 
-[OmniDoc](https://omnidoc.top/) · [GitHub](https://github.com/OmniDocX)
+[Website](https://omnidoc.top/) · [Quick start](#quick-start) · [Documentation](#documentation) · [Benchmarks](benchmarks/README.md)
 
-**Pinned source snapshots for OmniDoc's China-developed office projects.**
+[![CI](https://github.com/OmniDocX/omnidoc/actions/workflows/ci.yml/badge.svg)](https://github.com/OmniDocX/omnidoc/actions/workflows/ci.yml)
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm_Noncommercial-315EFB?style=flat-square)](LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/OmniDocX/omnidoc?style=flat-square)](https://github.com/OmniDocX/omnidoc/issues)
 
-OmniDoc brings together buildable copies of UniPPT, UniCell and vecmeta for local presentation, spreadsheet and vector conversion workflows. These are independently developed OmniDoc projects; third-party dependencies retain their own origins and licenses.
+</div>
 
-## Project positioning
+OmniDoc brings together **UniPPT, UniCell and vecmeta**: two office applications you can run locally, plus a Rust component connecting SVG and EMF. Explore and build them in one repository, then integrate through their AI, MCP or library interfaces.
 
-**Microsoft 365 (Office 365) and WPS Office** are the reference office products. Our ambition is to build the most complete China-developed office platform with publicly available source and reproducible engineering evidence. This is a development objective; see the [product comparison](docs/COMPARISON.md) for current scope and evidence. First-party code uses a non-commercial source license, detailed below.
+The source collection for OmniDoc’s China-developed application projects. Visit [omnidoc.top](https://omnidoc.top/) for the full product family.
 
-## Performance
+![OmniDoc project family](docs/images/overview.svg)
 
-<!-- BENCHMARK:START -->
-Environment: Windows 10 10.0.19045, Intel Core i7-1165G7 (4 cores / 8 threads), 31.70 GiB RAM, Python 3.13.11; components use Rust 1.97.1 release builds. Each case has two warmups and seven measured iterations, run sequentially. Nearest-rank P95 equals the maximum with seven samples. All measured observations are retained.
+## Choose your tools
 
-| Project | Operation | Size | Median ms | P95 ms |
-| --- | --- | ---: | ---: | ---: |
-| UniPPT | PPTX export | 100 slides | 139.41 | 316.91 |
-| UniPPT | PPTX import, cache miss | 100 slides | 813.36 | 1721.34 |
-| UniCell | CSV import + calculation | 10,000 rows | 660.92 | 707.79 |
-| UniCell | XLSX export | 10,000 rows | 562.30 | 618.65 |
-| UniCell | Batch edit + recalculation | 10,000 rows | 120.68 | 135.50 |
-| vecmeta | SVG → EMF, CLI | 10,000 primitives | 105.80 | 118.47 |
-| vecmeta | EMF → SVG, CLI | 10,000 primitives | 57.10 | 95.53 |
+| Project | Use it for | Get started |
+| --- | --- | --- |
+| **UniPPT** | Editable presentations, PPTX conversion and AI workflows | [Docs](projects/UniPPT/README.md) · [GitHub](https://github.com/OmniDocX/UniPPT) |
+| **UniCell** | Local spreadsheets, formulas and Excel / CSV workflows | [Docs](projects/unicell/README.md) · [GitHub](https://github.com/OmniDocX/unicell) |
+| **vecmeta** | Rust SVG ↔ EMF libraries and CLI | [Docs](projects/vecmeta/README.md) · [GitHub](https://github.com/OmniDocX/vecmeta) |
 
-UniCell includes the SUM optimization: public-edition import plus calculation of the same 10,000-row CSV improved from 20.217 s to 0.661 s, approximately 31×; all 20,000 formulas and results passed on every new iteration. The earlier full-application experiment at 0.368 s (approximately 55×) and the old baseline are retained in the [UniCell report](projects/unicell/benchmarks/README.md). The optimized measurements use different builds and must not be conflated.
+<table>
+  <tr>
+    <td width="50%"><a href="projects/UniPPT/README.md"><img src="projects/UniPPT/docs/images/editor.png" alt="UniPPT presentation editor" /></a></td>
+    <td width="50%"><a href="projects/unicell/README.md"><img src="projects/unicell/docs/images/editor.png" alt="UniCell spreadsheet editor" /></a></td>
+  </tr>
+  <tr><td align="center"><strong>UniPPT</strong></td><td align="center"><strong>UniCell</strong></td></tr>
+</table>
 
-[Full report and source integrity verification](benchmarks/README.md)
+## Why this collection
 
-Background load on the shared workstation was not fully controlled; results apply only to the listed synthetic workloads. HTTP measurements exclude browser rendering; vecmeta includes CLI startup and file I/O. Office 365, Excel and WPS were not timed, so no competitor speed ranking is reported.
-<!-- BENCHMARK:END -->
-
-## Included projects
-
-| Project | Purpose | Source and documentation | Performance report |
-| --- | --- | --- | --- |
-| UniPPT | Local presentation editing and PPTX conversion | [English](projects/UniPPT/README.md) · [中文](projects/UniPPT/README.zh-CN.md) | [Benchmark](projects/UniPPT/benchmarks/README.md) |
-| UniCell | Local spreadsheets, calculation and format conversion | [English](projects/unicell/README.md) · [中文](projects/unicell/README.zh-CN.md) | [Benchmark](projects/unicell/benchmarks/README.md) |
-| vecmeta | SVG/EMF conversion libraries and CLI | [English](projects/vecmeta/README.md) · [中文](projects/vecmeta/README.zh-CN.md) | [Benchmark](projects/vecmeta/benchmarks/README.md) |
-
-PolyglotPDF is excluded. The `projects/` directories contain ordinary copied files. Build each component independently and update the provenance manifest when refreshing snapshots.
+- **Start with working applications** — Build browser-based presentation and spreadsheet editors with import, editing, calculation and export workflows.
+- **Connect AI workflows** — Explore local MCP, native document operations and configurable model integration through existing application interfaces.
+- **Explore format engines** — Follow PPTX / XLSX processing down to the Rust vector conversion layer.
+- **Source with supporting evidence** — Each component includes build instructions, licensing and measurements, with pinned origins for reproducibility.
 
 ## Quick start
+
+Clone the repository, then start the component you need. Each component runs independently:
 
 ```sh
 git clone https://github.com/OmniDocX/omnidoc.git
 cd omnidoc
-python tools/verify_copies.py
+```
+
+**Presentations · UniPPT**
+
+```sh
 cd projects/UniPPT
 cargo run --release --locked -p unippt-server
 ```
 
-Open http://127.0.0.1:8141. Consult UniCell's own documentation for its launch command and optional dependencies. This collection does not provide a combined office-suite server.
+http://127.0.0.1:8141
 
-## Provenance and integrity
+<details>
+<summary>Start UniCell or build vecmeta</summary>
 
-[sources.lock.json](sources.lock.json) records public source repositories, commit IDs and a SHA-256 for every copied file. `python tools/verify_copies.py` checks the tracked file set and file contents. Each project retains its license, third-party notices and raw benchmark observations.
+Run each block from the collection root:
 
-The public applications use local files and loopback services. R2, cloud storage, collaborative editing, shared links and centralized accounts are outside the public edition.
+```sh
+cd projects/unicell
+cargo run --release --locked --manifest-path server/Cargo.toml
+```
 
-## OmniDoc ecosystem
+http://127.0.0.1:8143
 
-| Project | Purpose | Website / source |
+```sh
+cd projects/vecmeta
+cargo build --release --locked -p emfsvg-cli
+```
+
+</details>
+
+Git, Rust and a modern browser are required. Each project documents its toolchain version, platform dependencies and optional AI setup.
+
+## Performance at a glance
+
+<!-- BENCHMARK:START -->
+| Project | Workload | Median |
 | --- | --- | --- |
-| OmniDoc | Main product portal | [omnidoc.top](https://omnidoc.top/) |
-| UniDoc | Document authoring | [app.unidoc.top](https://app.unidoc.top/) |
-| UniPPT | Presentations | [Editor](https://unippt.unidoc.top/) · [Source](https://github.com/OmniDocX/UniPPT) |
-| UniCell | Spreadsheets | [Editor](https://unicell.unidoc.top/) · [Source](https://github.com/OmniDocX/unicell) |
-| UniMail | Email, calendar and contacts | [unimail.omnidoc.top](https://unimail.omnidoc.top/) |
-| UniPic | Image and vector editing | [pic.unidoc.top](https://pic.unidoc.top/) |
-| vecmeta | SVG ↔ EMF conversion | [Source](https://github.com/OmniDocX/vecmeta) |
-| Source collections | Pinned copies of the three published components | [omnidoc](https://github.com/OmniDocX/omnidoc) · [omnidocx](https://github.com/OmniDocX/omnidocx) |
+| UniPPT | 100-slide PPTX export | **139.41 ms** |
+| UniCell | 10,000-row CSV import + calculation; 20,000 formulas | **660.92 ms** |
+| vecmeta | 10,000-primitive SVG → EMF | **105.80 ms** |
 
-Hosted products may offer features beyond the public local editions. Their availability and terms are defined by each product.
+2026-09-16 · Windows 10 · Intel i7-1165G7 · 31.7 GiB · Rust release · 2 warmups / 7 measurements. Synthetic workloads; no competitor speed comparison was performed.
 
-## License and commercial use
+[Full benchmarks and component observations](benchmarks/README.md)
+<!-- BENCHMARK:END -->
 
-First-party code and documentation use the unmodified [PolyForm Noncommercial 1.0.0](LICENSE). Uses permitted by that license are free. Commercial uses outside its permitted purposes require a separate paid commercial license: contact us to apply, agree on fees and obtain written authorization before use. The standard license's institutional permissions remain fully applicable. This is a source-available license, not an OSI-approved open-source license. Third-party terms and valid earlier grants remain unchanged.
+## Edition and included source
 
-[License scope and permitted uses](docs/LICENSING.md) · [Commercial licensing and application](docs/COMMERCIAL_LICENSE.md).
+This collection includes the single-user local editions of UniPPT and UniCell, plus vecmeta. PolyglotPDF is excluded. The public editions provide core editing and format processing without R2, cloud storage, collaboration, shared links or centralized accounts.
 
-Commercial contact: [cc@omnidoc.top](mailto:cc@omnidoc.top) · WeChat: **13184071590**. Complete applications receive a response within 48 hours; submission or silence does not grant permission.
+The `projects/` directories contain independently buildable source copies. [sources.lock.json](sources.lock.json) records upstream repositories, commits and file hashes. Run `python tools/verify_copies.py` to verify the copies.
+
+## Documentation
+
+| Guide | What it covers |
+| --- | --- |
+| [UniPPT](projects/UniPPT/README.md) | Editor, MCP, equations and exports |
+| [UniCell](projects/unicell/README.md) | Workbooks, calculation, AI and file formats |
+| [vecmeta](projects/vecmeta/README.md) | CLI, Rust APIs and compatibility |
+| [OmniDoc](https://omnidoc.top/) | Product portal and applications |
+
+## Online product family
+
+[UniDoc](https://app.unidoc.top/) · [UniPPT](https://unippt.unidoc.top/) · [UniCell](https://unicell.unidoc.top/) · [UniMail](https://unimail.omnidoc.top/) · [UniPic](https://pic.unidoc.top/)
+
+Hosted features and service availability are documented by each product.
+
+## OmniDoc and community
+
+[OmniDoc website](https://omnidoc.top/) · [UniPPT](https://github.com/OmniDocX/UniPPT) · [UniCell](https://github.com/OmniDocX/unicell) · [vecmeta](https://github.com/OmniDocX/vecmeta)
+
+Share reproducible bugs and feature requests through [GitHub Issues](https://github.com/OmniDocX/omnidoc/issues). Contributions to features, format compatibility and documentation are welcome.
+
+Microsoft 365 (Office 365) and WPS Office inform our office workflows; ONLYOFFICE and Univer are reference projects in the public office ecosystem. See [project positioning and capabilities](docs/COMPARISON.md).
+
+## License and commercial licensing
+
+First-party code uses [PolyForm Noncommercial 1.0.0](LICENSE). Noncommercial and specified institutional uses are free under its terms. Commercial uses outside those permissions require a [paid commercial license](docs/COMMERCIAL_LICENSE.md) and written authorization.
+
+**Commercial contact: [cc@omnidoc.top](mailto:cc@omnidoc.top) · WeChat: 13184071590**
+
+This is a source-available license, not an OSI-approved open-source license. Third-party terms and valid earlier grants remain independent. See [license scope](docs/LICENSING.md).

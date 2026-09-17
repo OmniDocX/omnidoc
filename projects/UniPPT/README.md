@@ -1,52 +1,41 @@
+<div align="center">
+
+<img src="web/unippt-logo.svg" width="72" height="72" alt="UniPPT" />
+
 # UniPPT
+
+**Create presentations in your browser. Export native, editable PPTX.**
 
 **English** | [简体中文](README.zh-CN.md)
 
-[OmniDoc](https://omnidoc.top/) · [GitHub](https://github.com/OmniDocX)
+[Website](https://omnidoc.top/) · [Live app](https://unippt.unidoc.top/) · [Quick start](#quick-start) · [Documentation](#documentation) · [Benchmarks](benchmarks/README.md)
 
-**Native presentation editing, PPTX conversion and local AI automation.**
+[![CI](https://github.com/OmniDocX/UniPPT/actions/workflows/verify.yml/badge.svg)](https://github.com/OmniDocX/UniPPT/actions/workflows/verify.yml)
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm_Noncommercial-315EFB?style=flat-square)](LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/OmniDocX/UniPPT?style=flat-square)](https://github.com/OmniDocX/UniPPT/issues)
 
-UniPPT is a China-developed presentation application from OmniDoc. It combines a Rust document engine with an HTML/SVG browser editor. Text, shapes, images, equations and supported animations are represented as structured objects and exported to native PPTX elements.
+</div>
 
-## Project positioning
+UniPPT combines a browser editor, a Rust document engine and local AI automation for lessons, reports, technical talks and everyday presentations. Work with structured text, shapes, images, equations and animations; import a PPTX, keep editing, then export to PPTX, UDOC or HTML.
 
-**Microsoft 365 (Office 365) and WPS Office** are the reference office products. Our ambition is to build the most complete China-developed office platform with publicly available source and reproducible engineering evidence. This is a development objective; see the [product comparison](docs/COMPARISON.md) for current scope and evidence. First-party code uses a non-commercial source license, detailed below.
+Developed in China as part of OmniDoc, with a public local edition you can build and run yourself.
 
-## Performance
+![UniPPT presentation editor](docs/images/editor.png)
 
-<!-- BENCHMARK:START -->
-Measured on 2026-09-16: Windows 10, Intel Core i7-1165G7, 31.70 GiB RAM. Each case uses two warmups and seven measured iterations, executed sequentially.
+<sub>Actual public local edition: native text, shapes and Office math.</sub>
 
-| Operation | Size (slides) | Median ms | P95 ms |
-| --- | ---: | ---: | ---: |
-| PPTX export | 100 | 139.41 | 316.91 |
-| PPTX import, cache miss | 100 | 813.36 | 1721.34 |
-| UDOC export | 100 | 669.36 | 1189.64 |
-| UDOC import, cache miss | 100 | 72.49 | 85.58 |
-| HTML export | 100 | 325.71 | 369.41 |
-| HTML import, cache miss | 100 | 83.82 | 278.04 |
+## Highlights
 
-[All sizes, methodology and limitations](benchmarks/README.md) · [Raw observations](benchmarks/results/2026-09-16-windows-x64.json)
-
-Timings exclude browser rendering. Office 365 and WPS were not timed in this campaign.
-<!-- BENCHMARK:END -->
-
-## Capabilities
-
-| Area | Public local edition |
-| --- | --- |
-| Editing | Text and shapes, images, connectors, equations, object transforms, slide notes, undo/redo |
-| Presenting | Slideshow, supported animation effects, timing and motion paths |
-| Document formats | PPTX import/export; portable UDOC and re-importable HTML |
-| Format preservation | Retain untouched OPC parts and supported unknown extensions during round trips |
-| Automation | Local stdio MCP, object-level operations, editable-slides workflow and optional configurable U AI |
-| Optional delivery | Preview, PDF, images and video through the documented browser/rendering toolchain |
-
-This repository contains the single-user local edition. R2, cloud storage, shared editing, sharing links, remote accounts and hosted collaboration are outside its scope.
+- **Native object editing** — Arrange text, shapes, images, connectors and equations, with alignment, grouping, undo and redo.
+- **A PPTX workflow** — Import existing decks, edit supported objects and export native PPTX; the format engine retains untouched parts for round trips.
+- **Present and animate** — Run slideshows in the browser with supported effects, motion paths, timing and speaker notes.
+- **Math authoring** — Use LaTeX editing and Office equation conversion for educational and technical content.
+- **AI and MCP** — Configure U AI in the editor or let an external AI client inspect, edit and preview decks through local stdio MCP.
+- **Flexible delivery** — Save PPTX, UDOC or re-importable HTML. Add the documented toolchain for PDF, image and video exports.
 
 ## Quick start
 
-Requirements: Git, Rust 1.88+ and a modern browser. Frontend assets are served directly; no frontend build is required.
+With Git, Rust 1.88+ and a modern browser installed:
 
 ```sh
 git clone https://github.com/OmniDocX/UniPPT.git
@@ -54,59 +43,75 @@ cd UniPPT
 cargo run --release --locked -p unippt-server
 ```
 
-Open **http://127.0.0.1:8141**. Set `UNIPPT_PORT` to change the port. The service binds to the loopback interface. Save documents to local files.
+Open **http://127.0.0.1:8141** and start editing. The server includes the frontend; no separate frontend build is needed. Set `UNIPPT_PORT` to change the port.
 
-For LaTeX/Office equation conversion, install Python 3.10+ and `python -m pip install -r tools/math/requirements.txt`; use `UNIPPT_PYTHON` to select the interpreter. Node.js 22+ and `npm ci` are required for MCP image processing and the complete JavaScript checks. Chromium and FFmpeg are optional dependencies for specific export workflows. See [local runtime](docs/LOCAL_RUNTIME.md).
+<details>
+<summary>Optional dependencies</summary>
 
-## AI and local MCP
+Equation conversion uses Python 3.10+: `python -m pip install -r tools/math/requirements.txt`. MCP image processing requires Node.js 22+ and `npm ci`. Chromium and FFmpeg support the corresponding rendering/video workflows. See [runtime setup](docs/LOCAL_RUNTIME.md).
 
-Start `node /absolute/path/to/UniPPT/tools/unippt_mcp.cjs` from a stdio-capable MCP client and connect to an open local document. See the [integration guide](docs/AI_MCP_INTEGRATION.md), [protocol](docs/MCP_PROTOCOL.md) and [editable-slides workflow](skills/unippt-editable-slides/SKILL.md).
+</details>
 
-U AI accepts a configurable provider through `UNIPPT_AI_BASE`, `UNIPPT_AI_MODEL` and `UNIPPT_AI_KEY`, or the local settings interface. Store keys locally. Selected context is sent to the configured provider; basic editing works without AI. Coordinate OCR requires a DashScope-compatible native protocol, independently of MCP host configuration.
+## Connect your AI workflow
 
-## Compatibility
+Start UniPPT, then add this configuration to a stdio-capable MCP client. Replace the path with your installation directory:
 
-Native editing and source preservation are distinct capabilities. Charts, SmartArt, OLE, masters and advanced animation have object-specific limits; successful export does not establish complete PowerPoint compatibility. Validate object semantics and rendered output for production documents. See [compatibility](docs/COMPATIBILITY.md), [portable formats](docs/PORTABLE_FORMATS.md) and the [user guide](docs/USER_GUIDE.md).
-
-## Architecture and verification
-
-| Directory | Responsibility |
-| --- | --- |
-| `crates/unippt-core` | Document model, formats, equations and animation |
-| `crates/unippt-server` | Local HTTP service, rendering and AI integration |
-| `web` | Browser editor and presentation UI |
-| `vendor/pptx`, `vendor/vecmeta` | Attributed third-party fork and versioned vector component |
-| `benchmarks` | Synthetic workloads, measured results and reproduction instructions |
-
-```sh
-cargo test --workspace --locked
-npm ci
-node --test web/*.test.js tools/*.test.cjs
-python tools/test_public_boundary.py -v
-python tools/check_public_boundary.py
+```json
+{
+  "mcpServers": {
+    "unippt": {
+      "command": "node",
+      "args": ["/absolute/path/to/UniPPT/tools/unippt_mcp.cjs"]
+    }
+  }
+}
 ```
 
-The publication check inspects indexed files; stage intended changes before running it. [Architecture](docs/ARCHITECTURE.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Licensing details](docs/LICENSING.md).
+Connect to the current local document to inspect objects, compose slides, modify layouts and check previews. [MCP guide](docs/AI_MCP_INTEGRATION.md) · [Editable-slides skill](skills/unippt-editable-slides/SKILL.md).
 
-## OmniDoc ecosystem
+The editor’s **U AI** supports a configurable model provider through `UNIPPT_AI_BASE`, `UNIPPT_AI_MODEL` and `UNIPPT_AI_KEY`. When enabled, selected content is sent to that provider.
 
-| Project | Purpose | Website / source |
+## Performance
+
+<!-- BENCHMARK:START -->
+| Operation | Workload | Median |
 | --- | --- | --- |
-| OmniDoc | Main product portal | [omnidoc.top](https://omnidoc.top/) |
-| UniDoc | Document authoring | [app.unidoc.top](https://app.unidoc.top/) |
-| UniPPT | Presentations | [Editor](https://unippt.unidoc.top/) · [Source](https://github.com/OmniDocX/UniPPT) |
-| UniCell | Spreadsheets | [Editor](https://unicell.unidoc.top/) · [Source](https://github.com/OmniDocX/unicell) |
-| UniMail | Email, calendar and contacts | [unimail.omnidoc.top](https://unimail.omnidoc.top/) |
-| UniPic | Image and vector editing | [pic.unidoc.top](https://pic.unidoc.top/) |
-| vecmeta | SVG ↔ EMF conversion | [Source](https://github.com/OmniDocX/vecmeta) |
-| Source collections | Pinned copies of the three published components | [omnidoc](https://github.com/OmniDocX/omnidoc) · [omnidocx](https://github.com/OmniDocX/omnidocx) |
+| PPTX export | 100 slides | **139.41 ms** |
+| PPTX import, cache miss | 100 slides | **813.36 ms** |
 
-Hosted products may offer features beyond the public local editions. Their availability and terms are defined by each product.
+2026-09-16 · Windows 10 · Intel i7-1165G7 · 31.7 GiB · Rust release · 2 warmups / 7 measurements.
 
-## License and commercial use
+[Full results, raw observations and reproduction](benchmarks/README.md) — Synthetic local workloads; browser rendering is excluded. Other office products were not timed.
+<!-- BENCHMARK:END -->
 
-First-party code and documentation use the unmodified [PolyForm Noncommercial 1.0.0](LICENSE). Uses permitted by that license are free. Commercial uses outside its permitted purposes require a separate paid commercial license: contact us to apply, agree on fees and obtain written authorization before use. The standard license's institutional permissions remain fully applicable. This is a source-available license, not an OSI-approved open-source license. Third-party terms and valid earlier grants remain unchanged.
+## Edition and file compatibility
 
-[License scope and permitted uses](docs/LICENSING.md) · [Commercial licensing and application](docs/COMMERCIAL_LICENSE.md).
+This repository is the single-user local edition, with documents saved to local files. The live product is linked above; R2, cloud storage, sharing links, collaborative editing and hosted accounts are outside this edition.
 
-Commercial contact: [cc@omnidoc.top](mailto:cc@omnidoc.top) · WeChat: **13184071590**. Complete applications receive a response within 48 hours; submission or silence does not grant permission.
+PPTX editing and preservation depend on object type. See [compatibility](docs/COMPATIBILITY.md) for charts, SmartArt, OLE, masters and advanced animation.
+
+## Documentation
+
+| Guide | What it covers |
+| --- | --- |
+| [User guide](docs/USER_GUIDE.md) | Editing, presenting and exporting |
+| [MCP](docs/MCP_PROTOCOL.md) | Tool protocol and integration |
+| [Document formats](docs/PORTABLE_FORMATS.md) | PPTX, UDOC and HTML |
+| [Architecture](docs/ARCHITECTURE.md) | Engine, server and editor |
+| [Contributing](CONTRIBUTING.md) | Development, tests and contribution workflow |
+
+## OmniDoc and community
+
+[OmniDoc website](https://omnidoc.top/) · [UniPPT](https://github.com/OmniDocX/UniPPT) · [UniCell](https://github.com/OmniDocX/unicell) · [vecmeta](https://github.com/OmniDocX/vecmeta)
+
+Share reproducible bugs and feature requests through [GitHub Issues](https://github.com/OmniDocX/UniPPT/issues). Contributions to features, format compatibility and documentation are welcome.
+
+Microsoft 365 (Office 365) and WPS Office inform our office workflows; ONLYOFFICE and Univer are reference projects in the public office ecosystem. See [project positioning and capabilities](docs/COMPARISON.md).
+
+## License and commercial licensing
+
+First-party code uses [PolyForm Noncommercial 1.0.0](LICENSE). Noncommercial and specified institutional uses are free under its terms. Commercial uses outside those permissions require a [paid commercial license](docs/COMMERCIAL_LICENSE.md) and written authorization.
+
+**Commercial contact: [cc@omnidoc.top](mailto:cc@omnidoc.top) · WeChat: 13184071590**
+
+This is a source-available license, not an OSI-approved open-source license. Third-party terms and valid earlier grants remain independent. See [license scope](docs/LICENSING.md).

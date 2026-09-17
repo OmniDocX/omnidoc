@@ -8,7 +8,7 @@ import statistics
 root = Path(__file__).resolve().parents[1]
 reports = sorted((root / "benchmarks/results").glob("20*.json"))
 assert reports, "No dated benchmark report"
-assert (root / "benchmarks/results/2026-09-16-polyform-snapshot-windows-x64.json").exists(), "Missing current snapshot measurement"
+assert (root / "benchmarks/results/2026-09-18-product-readme-snapshot-windows-x64.json").exists(), "Missing current snapshot measurement"
 for path in reports:
     report = json.loads(path.read_text(encoding="utf-8"))
     assert report["schema_version"] == 1
@@ -16,10 +16,10 @@ for path in reports:
     assert report["samples_per_case"] > 0
     assert report["warmups_per_case"] >= 0
     assert len(report["environment"]["source_commit"]) == 40
-    if path.name == "2026-09-16-polyform-snapshot-windows-x64.json":
+    if path.name == "2026-09-18-product-readme-snapshot-windows-x64.json":
         assert report["environment"]["harness_sha256"] == hashlib.sha256((root / "benchmarks/run.py").read_bytes()).hexdigest()
     manifest_path = root / "sources.lock.json"
-    if manifest_path.exists() and path.name == "2026-09-16-polyform-snapshot-windows-x64.json":
+    if manifest_path.exists() and path.name == "2026-09-18-product-readme-snapshot-windows-x64.json":
         assert report["manifest_sha256"] == hashlib.sha256(manifest_path.read_bytes()).hexdigest()
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         assert report["source_snapshot_commits"] == {p["name"]: p["commit"] for p in manifest["projects"]}

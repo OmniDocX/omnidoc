@@ -1,125 +1,120 @@
+<div align="center">
+
 # vecmeta
+
+**A Rust vector engine connecting browser SVG with Office EMF.**
 
 **English** | [简体中文](README.zh-CN.md)
 
-[OmniDoc](https://omnidoc.top/) · [GitHub](https://github.com/OmniDocX)
+[Website](https://omnidoc.top/) · [Quick start](#quick-start) · [Documentation](#documentation) · [Benchmarks](benchmarks/README.md)
 
-**Native Rust libraries and CLI for SVG ↔ EMF conversion.**
+[![CI](https://github.com/OmniDocX/vecmeta/actions/workflows/verify.yml/badge.svg)](https://github.com/OmniDocX/vecmeta/actions/workflows/verify.yml)
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm_Noncommercial-315EFB?style=flat-square)](LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/OmniDocX/vecmeta?style=flat-square)](https://github.com/OmniDocX/vecmeta/issues)
 
-vecmeta is OmniDoc's independently developed Chinese vector conversion component. A shared scene representation connects SVG parsing, EMF record playback and vector serialization. Conversion does not require Microsoft Office, LibreOffice or a C conversion library.
+</div>
 
-## Project positioning
+vecmeta provides Rust libraries and a CLI for bidirectional SVG ↔ EMF conversion. A shared scene model handles paths, shapes, transforms, paint and glyph outlines for document converters, vector asset pipelines and office applications. Conversion runs without Microsoft Office or LibreOffice installed.
 
-**Microsoft 365 (Office 365) and WPS Office** are the reference office products. Our ambition is to build the most complete China-developed office platform with publicly available source and reproducible engineering evidence. This is a development objective; see the [product comparison](docs/COMPARISON.md) for current scope and evidence. First-party code uses a non-commercial source license, detailed below.
+An independently developed OmniDoc component from China, supplying vector conversion to its application projects.
 
-## Performance
+![vecmeta: SVG and EMF connected through a shared vector scene](docs/images/pipeline.svg)
 
-<!-- BENCHMARK:START -->
-Measured on 2026-09-16: Windows 10, Intel Core i7-1165G7, 31.70 GiB RAM. Each case uses two warmups and seven measured iterations, executed sequentially.
+## Highlights
 
-| Operation | Size (primitives) | Median ms | P95 ms |
-| --- | ---: | ---: | ---: |
-| SVG → EMF, CLI | 10,000 | 105.80 | 118.47 |
-| EMF → SVG, CLI | 10,000 | 57.10 | 95.53 |
-| Geometry round trip, CLI | 10,000 | 206.04 | 224.29 |
-
-[All sizes, methodology and limitations](benchmarks/README.md) · [Raw observations](benchmarks/results/2026-09-16-windows-x64.json)
-
-Timings exclude browser rendering. Office 365 and WPS were not timed in this campaign.
-<!-- BENCHMARK:END -->
-
-## Capabilities
-
-| Area | Implementation |
-| --- | --- |
-| EMF | Binary records, drawing state, transforms, pens, brushes, paths and primitives |
-| SVG | Supported shapes, paths, styles, inheritance, CSS specificity and references |
-| Text | Font lookup and glyph outlines through fontdb/ttf-parser |
-| Paint | Supported fill/stroke and linear gradient handling; embedded EMF+ paint information |
-| Source recovery | Optional `--lossless` encapsulation of original source for exact reverse recovery |
-| Diagnostics | Conversion reports for skipped content, warnings and embedded-source recovery |
+- **Two-way conversion** — Emit EMF from SVG or turn EMF drawing records into browser-readable SVG.
+- **Rust libraries and CLI** — Embed conversion in Rust applications or use the command line in batch jobs, build scripts and local tools.
+- **Shared vector model** — Use consistent paths, transforms, fills, strokes and supported gradient handling.
+- **Glyph outlines** — Find fonts and extract glyph geometry through fontdb and ttf-parser.
+- **Conversion diagnostics** — Receive warnings about skipped content and compatibility losses for downstream handling.
+- **Optional source recovery** — Use `--lossless` to encapsulate original data and recover the embedded source on reverse conversion.
 
 ## Quick start
 
-Install Rust and Cargo; CI uses Rust 1.88. Text-to-outline conversion additionally requires the requested fonts to be installed.
+Install Rust and Cargo; CI uses Rust 1.88:
 
 ```sh
 git clone https://github.com/OmniDocX/vecmeta.git
 cd vecmeta
-cargo build --release --locked
-```
+cargo build --release --locked -p emfsvg-cli
 
-The executable is `target/release/emfsvg` (`emfsvg.exe` on Windows).
-
-```sh
+# SVG → EMF
 cargo run --release --locked -p emfsvg-cli -- to-emf input.svg -o output.emf
+
+# EMF → SVG
 cargo run --release --locked -p emfsvg-cli -- to-svg input.emf -o output.svg
-cargo run --release --locked -p emfsvg-cli -- roundtrip input.emf --tolerance 1e-6
-cargo run --release --locked -p emfsvg-cli -- to-emf input.svg -o archive.emf --lossless
 ```
 
-Use `--verbose` for diagnostics and `--help` for supported arguments.
+The executable is `target/release/emfsvg` (`emfsvg.exe` on Windows). Use `--help` for arguments. Text-to-outline conversion requires the corresponding fonts.
 
 ## Rust integration
 
+Add the `svg2emf` / `emf2svg` crates as path or Git dependencies to convert directly and inspect diagnostics:
+
 ```rust
-use emf2svg::{emf_to_svg_with, Emf2SvgOptions};
-use svg2emf::{svg_to_emf, EmitOptions};
+use svg2emf::{svg_to_emf_with_report, EmitOptions};
 
-let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="25"/></svg>"#;
-let emf = svg_to_emf(svg, EmitOptions {
-    lossless: true,
-    ..Default::default()
-}).expect("SVG conversion");
-let recovered = emf_to_svg_with(&emf, Emf2SvgOptions { lossless: true })
-    .expect("Source recovery");
-assert_eq!(svg, recovered);
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+      <circle cx="50" cy="50" r="25" fill="#315efb"/>
+    </svg>"#;
+
+    let result = svg_to_emf_with_report(svg, EmitOptions::default())?;
+    std::fs::write("output.emf", &result.bytes)?;
+    for warning in &result.warnings {
+        eprintln!("{warning}");
+    }
+    Ok(())
+}
+
 ```
 
-`emf_to_svg_with_report` and `svg_to_emf_with_report` also return compatibility diagnostics. UniPPT embeds an independently versioned component snapshot; use the API documented by the target snapshot.
+Use `emf_to_svg_with_report` for the reverse path. UniPPT embeds a separately versioned snapshot; use the APIs available in your target component.
 
-## Fidelity and limitations
+## Performance
 
-Geometry conversion and exact source recovery are separate mechanisms. `--lossless` embeds the original data; it does not guarantee identical rendering in third-party applications or merge intermediate edits into the embedded original. Glyph outlines retain geometry rather than editable text.
-
-Unsupported bitmap, filter or clipping semantics may be skipped; inspect reports. Radial gradients are approximated linearly. Classic EMF viewers may flatten gradients or ignore alpha. Text behavior depends on fonts and does not implement complete shaping/bidirectional layout. Office/browser pixel consistency requires separate rendering checks.
-
-## Architecture and verification
-
-| Crate | Responsibility |
-| --- | --- |
-| `vector-ir` | Shared scene, paths, transforms and paint |
-| `emf-core` | EMF binary read/write and records |
-| `glyph2path` | Font discovery and outline extraction |
-| `emf2svg` | EMF playback and SVG emission |
-| `svg2emf` | SVG parsing and EMF emission |
-| `emfsvg-cli` | Command-line conversion and geometry regressions |
-
-```sh
-cargo test --workspace --locked
-```
-
-Four external-corpus tests are ignored by default and require separately authorized assets. See [provenance](docs/PROVENANCE.md). Synthetic benchmark fixtures are generated by the supplied harness and require no external corpus. [Commercial licensing](docs/COMMERCIAL_LICENSE.md).
-
-## OmniDoc ecosystem
-
-| Project | Purpose | Website / source |
+<!-- BENCHMARK:START -->
+| Operation | Workload | Median |
 | --- | --- | --- |
-| OmniDoc | Main product portal | [omnidoc.top](https://omnidoc.top/) |
-| UniDoc | Document authoring | [app.unidoc.top](https://app.unidoc.top/) |
-| UniPPT | Presentations | [Editor](https://unippt.unidoc.top/) · [Source](https://github.com/OmniDocX/UniPPT) |
-| UniCell | Spreadsheets | [Editor](https://unicell.unidoc.top/) · [Source](https://github.com/OmniDocX/unicell) |
-| UniMail | Email, calendar and contacts | [unimail.omnidoc.top](https://unimail.omnidoc.top/) |
-| UniPic | Image and vector editing | [pic.unidoc.top](https://pic.unidoc.top/) |
-| vecmeta | SVG ↔ EMF conversion | [Source](https://github.com/OmniDocX/vecmeta) |
-| Source collections | Pinned copies of the three published components | [omnidoc](https://github.com/OmniDocX/omnidoc) · [omnidocx](https://github.com/OmniDocX/omnidocx) |
+| SVG → EMF | 10,000 primitives | **105.80 ms** |
+| EMF → SVG | 10,000 primitives | **57.10 ms** |
+| Geometry round trip | 10,000 primitives | **206.04 ms** |
 
-Hosted products may offer features beyond the public local editions. Their availability and terms are defined by each product.
+2026-09-16 · Windows 10 · Intel i7-1165G7 · 31.7 GiB · Rust release · 2 warmups / 7 measurements.
 
-## License and commercial use
+[Full results, raw observations and reproduction](benchmarks/README.md) — Synthetic local workloads; browser rendering is excluded. Other office products were not timed.
+<!-- BENCHMARK:END -->
 
-First-party code and documentation use the unmodified [PolyForm Noncommercial 1.0.0](LICENSE). Uses permitted by that license are free. Commercial uses outside its permitted purposes require a separate paid commercial license: contact us to apply, agree on fees and obtain written authorization before use. The standard license's institutional permissions remain fully applicable. This is a source-available license, not an OSI-approved open-source license. Third-party terms and valid earlier grants remain unchanged.
+## Conversion modes and compatibility
 
-[License scope and permitted uses](docs/LICENSING.md) · [Commercial licensing and application](docs/COMMERCIAL_LICENSE.md).
+Default conversion translates supported vector semantics. `--lossless` additionally embeds the source file. Exact source-byte recovery and matching rendering in another application are separate capabilities; rendering needs validation in the target application.
 
-Commercial contact: [cc@omnidoc.top](mailto:cc@omnidoc.top) · WeChat: **13184071590**. Complete applications receive a response within 48 hours; submission or silence does not grant permission.
+Outlined text becomes geometry. Bitmap, filter and clipping support is limited; radial gradients are approximated. Inspect conversion warnings and check important output in its destination application.
+
+## Documentation
+
+| Component | Responsibility |
+| --- | --- |
+| [`vector-ir`](crates/vector-ir) | Scenes, paths, transforms and paint |
+| [`emf-core`](crates/emf-core) | EMF binary records and I/O |
+| [`svg2emf`](crates/svg2emf) / [`emf2svg`](crates/emf2svg) | Parsing, conversion and diagnostics |
+| [`glyph2path`](crates/glyph2path) | Font lookup and glyph outlines |
+| [`emfsvg-cli`](crates/emfsvg-cli) | CLI and geometry round-trip checks |
+
+[Provenance](docs/PROVENANCE.md) · [Contributing](CONTRIBUTING.md) · [Full benchmarks](benchmarks/README.md)
+
+## OmniDoc and community
+
+[OmniDoc website](https://omnidoc.top/) · [UniPPT](https://github.com/OmniDocX/UniPPT) · [UniCell](https://github.com/OmniDocX/unicell) · [vecmeta](https://github.com/OmniDocX/vecmeta)
+
+Share reproducible bugs and feature requests through [GitHub Issues](https://github.com/OmniDocX/vecmeta/issues). Contributions to features, format compatibility and documentation are welcome.
+
+Microsoft 365 (Office 365) and WPS Office inform our office workflows; ONLYOFFICE and Univer are reference projects in the public office ecosystem. See [project positioning and capabilities](docs/COMPARISON.md).
+
+## License and commercial licensing
+
+First-party code uses [PolyForm Noncommercial 1.0.0](LICENSE). Noncommercial and specified institutional uses are free under its terms. Commercial uses outside those permissions require a [paid commercial license](docs/COMMERCIAL_LICENSE.md) and written authorization.
+
+**Commercial contact: [cc@omnidoc.top](mailto:cc@omnidoc.top) · WeChat: 13184071590**
+
+This is a source-available license, not an OSI-approved open-source license. Third-party terms and valid earlier grants remain independent. See [license scope](docs/LICENSING.md).
