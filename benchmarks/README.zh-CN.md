@@ -24,15 +24,27 @@ UniCell 已收录 SUM 优化：公开本机版相同 1 万行 CSV 导入并计�
 
 | 项目 | 收录提交 | 运行时构建提交 | 报告与数据 |
 | --- | --- | --- | --- |
-| UniPPT | `14521e76459ac6236c484a0092e84da6e7b71f8b` | `e66c1e0eab10a93afd776a755e0973149dedcd73` | [Report](../projects/UniPPT/benchmarks/README.zh-CN.md) · [JSON](../projects/UniPPT/benchmarks/results/2026-09-16-windows-x64.json) |
-| unicell | `9a45c5f94da22cc78cd9654258c334ebef8ff15c` | `dc6f6c6a5c5de532e93b3adbf6a00336562a1a9f` | [Report](../projects/unicell/benchmarks/README.zh-CN.md) · [JSON](../projects/unicell/benchmarks/results/2026-09-16-sum-optimized-windows-x64.json) |
-| vecmeta | `5e186640fc943720635c2bc69e068078bc6d42a7` | `96acc4608d644d8137fd334412e82bb2ba7c5a0a` | [Report](../projects/vecmeta/benchmarks/README.zh-CN.md) · [JSON](../projects/vecmeta/benchmarks/results/2026-09-16-windows-x64.json) |
+| UniPPT | `7e27c547e9fe81984e3500bd5c68523de588c22a` | `e66c1e0eab10a93afd776a755e0973149dedcd73` | [Report](../projects/UniPPT/benchmarks/README.zh-CN.md) · [JSON](../projects/UniPPT/benchmarks/results/2026-09-16-windows-x64.json) |
+| unicell | `c7c4d4419deac6e02d880900f91bff809bc9133e` | `dc6f6c6a5c5de532e93b3adbf6a00336562a1a9f` | [Report](../projects/unicell/benchmarks/README.zh-CN.md) · [JSON](../projects/unicell/benchmarks/results/2026-09-16-sum-optimized-windows-x64.json) |
+| vecmeta | `b9994adb9d8bf2a2dbcbc1bed1b5a15e1604ea79` | `96acc4608d644d8137fd334412e82bb2ba7c5a0a` | [Report](../projects/vecmeta/benchmarks/README.zh-CN.md) · [JSON](../projects/vecmeta/benchmarks/results/2026-09-16-windows-x64.json) |
 
 ## 当前源码完整性校验
 
 当前源码集合校验包含 Python/Git 启动、暂存区文件集合检查、全部文件读取和 SHA-256 校验。操作系统缓存已预热，不包含网络和应用运行。两个合集逐个测量。
 
-1,333 files · 18,518,350 bytes · manifest SHA-256: `892fdc03696104800d2c2a3227c3e81598fd0596d174ca9b02531a2033d3e44d`
+1,338 files · 18,884,333 bytes · manifest SHA-256: `7aff61a823b1663f31268a9e5e27dca80a1bcdf4d303b2a41fb0df371ce54845`
+
+| 操作 | 规模（文件） | 中位数 ms | P95 ms |
+| --- | ---: | ---: | ---: |
+| 源码完整性校验 | 1,338 | 353.30 | 441.56 |
+
+[JSON](results/2026-09-18-product-readme-snapshot-windows-x64.json)
+
+## 保留的旧快照结果
+
+以下为上一版源码集合的测量，文件数及哈希对应旧快照，不代表当前集合，也不适合仅按时延变化推导优化收益。
+
+### 2026-09-16-polyform-snapshot-windows-x64
 
 | 操作 | 规模（文件） | 中位数 ms | P95 ms |
 | --- | ---: | ---: | ---: |
@@ -40,9 +52,7 @@ UniCell 已收录 SUM 优化：公开本机版相同 1 万行 CSV 导入并计�
 
 [JSON](results/2026-09-16-polyform-snapshot-windows-x64.json)
 
-## 保留的旧快照结果
-
-以下为上一版源码集合的测量，文件数及哈希对应旧快照，不代表当前集合，也不适合仅按时延变化推导优化收益。
+### 2026-09-16-windows-x64
 
 | 操作 | 规模（文件） | 中位数 ms | P95 ms |
 | --- | ---: | ---: | ---: |

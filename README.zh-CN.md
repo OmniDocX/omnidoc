@@ -16,7 +16,7 @@
 
 OmniDoc 汇集 OmniDoc 已公开的 **UniPPT、UniCell 与 vecmeta**：两款可在本机运行的办公应用，以及连接 SVG 与 EMF 的 Rust 转换组件。你可以在同一仓库阅读、构建和研究这些项目，再按需接入各自的 AI、MCP 或库接口。
 
-这是 OmniDoc **纯国产应用项目（app project）**的源码合集，产品主站为 [omnidoc.top](https://omnidoc.top/)。
+这是 OmniDoc 纯国产应用项目（app project）的源码合集，产品主站为 [omnidoc.top](https://omnidoc.top/)。
 
 ![OmniDoc project family](docs/images/overview.svg)
 

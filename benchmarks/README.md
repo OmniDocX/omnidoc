@@ -24,15 +24,27 @@ Background load on the shared workstation was not fully controlled; results appl
 
 | Project | Included commit | Runtime build commit | Report and data |
 | --- | --- | --- | --- |
-| UniPPT | `14521e76459ac6236c484a0092e84da6e7b71f8b` | `e66c1e0eab10a93afd776a755e0973149dedcd73` | [Report](../projects/UniPPT/benchmarks/README.md) · [JSON](../projects/UniPPT/benchmarks/results/2026-09-16-windows-x64.json) |
-| unicell | `9a45c5f94da22cc78cd9654258c334ebef8ff15c` | `dc6f6c6a5c5de532e93b3adbf6a00336562a1a9f` | [Report](../projects/unicell/benchmarks/README.md) · [JSON](../projects/unicell/benchmarks/results/2026-09-16-sum-optimized-windows-x64.json) |
-| vecmeta | `5e186640fc943720635c2bc69e068078bc6d42a7` | `96acc4608d644d8137fd334412e82bb2ba7c5a0a` | [Report](../projects/vecmeta/benchmarks/README.md) · [JSON](../projects/vecmeta/benchmarks/results/2026-09-16-windows-x64.json) |
+| UniPPT | `7e27c547e9fe81984e3500bd5c68523de588c22a` | `e66c1e0eab10a93afd776a755e0973149dedcd73` | [Report](../projects/UniPPT/benchmarks/README.md) · [JSON](../projects/UniPPT/benchmarks/results/2026-09-16-windows-x64.json) |
+| unicell | `c7c4d4419deac6e02d880900f91bff809bc9133e` | `dc6f6c6a5c5de532e93b3adbf6a00336562a1a9f` | [Report](../projects/unicell/benchmarks/README.md) · [JSON](../projects/unicell/benchmarks/results/2026-09-16-sum-optimized-windows-x64.json) |
+| vecmeta | `b9994adb9d8bf2a2dbcbc1bed1b5a15e1604ea79` | `96acc4608d644d8137fd334412e82bb2ba7c5a0a` | [Report](../projects/vecmeta/benchmarks/README.md) · [JSON](../projects/vecmeta/benchmarks/results/2026-09-16-windows-x64.json) |
 
 ## Current source integrity verification
 
 Current snapshot verification includes Python/Git startup, indexed file inventory, all source-file reads and SHA-256 checks. OS caches are warm; network and application runtime are excluded. The two collections were measured sequentially.
 
-1,333 files · 18,518,350 bytes · manifest SHA-256: `892fdc03696104800d2c2a3227c3e81598fd0596d174ca9b02531a2033d3e44d`
+1,338 files · 18,884,333 bytes · manifest SHA-256: `7aff61a823b1663f31268a9e5e27dca80a1bcdf4d303b2a41fb0df371ce54845`
+
+| Operation | Size (files) | Median ms | P95 ms |
+| --- | ---: | ---: | ---: |
+| Source integrity verification | 1,338 | 353.30 | 441.56 |
+
+[JSON](results/2026-09-18-product-readme-snapshot-windows-x64.json)
+
+## Preserved historical snapshot
+
+The following measurement belongs to the preceding source snapshot, with its own file count and hashes. It does not describe the current collection, and the latency change alone does not establish an optimization benefit.
+
+### 2026-09-16-polyform-snapshot-windows-x64
 
 | Operation | Size (files) | Median ms | P95 ms |
 | --- | ---: | ---: | ---: |
@@ -40,9 +52,7 @@ Current snapshot verification includes Python/Git startup, indexed file inventor
 
 [JSON](results/2026-09-16-polyform-snapshot-windows-x64.json)
 
-## Preserved historical snapshot
-
-The following measurement belongs to the preceding source snapshot, with its own file count and hashes. It does not describe the current collection, and the latency change alone does not establish an optimization benefit.
+### 2026-09-16-windows-x64
 
 | Operation | Size (files) | Median ms | P95 ms |
 | --- | ---: | ---: | ---: |
