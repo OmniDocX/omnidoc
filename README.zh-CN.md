@@ -2,7 +2,7 @@
 
 # OmniDoc
 
-**国产办公软件，专注编辑体验、文件兼容与处理性能。**
+**面向 AI 时代的国产办公平台。所见即所得，所见即应用。**
 
 [English](README.md) | **简体中文**
 
@@ -14,11 +14,17 @@
 
 </div>
 
-OmniDoc 是一个纯国产办公软件项目。我们围绕文档、表格和演示三类核心场景，持续打磨编辑体验、文件兼容性与处理性能，致力于把国产办公软件做扎实。
+OmniDoc 致力于建设 AI 时代的国产办公平台。以 UniDoc 动态文档为核心，我们将文字、布局、公式、数据与交互带入同一份文档，建设覆盖文档、表格、演示、图片和邮件的产品体系。
 
-本仓库公开 **UniPPT、UniCell 和 vecmeta** 三个项目的源码。UniPPT 用于演示文稿编辑，UniCell 用于电子表格编辑与计算，vecmeta 提供 SVG 与 EMF 矢量格式转换。每个项目均提供构建说明和性能测评，支持独立构建与运行。
+从石头与甲骨，到纸张、印刷和数字文档，人类表达与传播思想的方式不断演进。UniDoc 希望推动下一步：让文档能够承载实时数据、计算与交互，成为可以直接使用的应用。
 
-完整产品及在线服务：[omnidoc.top](https://omnidoc.top/)。
+**所见即所得，所见即应用。**
+
+这是一个纯国产办公软件项目。我们长期投入核心产品与文件格式研发，面向 Microsoft 365 和 WPS Office 所服务的办公需求，持续推进跨平台使用体验。
+
+本仓库公开 **UniPPT、UniCell 和 vecmeta** 三个项目的源码，附独立构建说明与性能测评。UniDoc 及完整产品可在官网体验。
+
+[体验 UniDoc](https://app.unidoc.top/) · [OmniDoc 官网](https://omnidoc.top/) · [我们的产品愿景](docs/VISION.zh-CN.md)
 
 ![OmniDoc project family](docs/images/overview.svg)
 
